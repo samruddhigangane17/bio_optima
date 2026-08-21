@@ -13,6 +13,10 @@ __pycache__/
 
 # Note: We are NOT ignoring *.csv right now so your team has the mock data. 
 # Later, you can add *.csv to this file when using real, massive datasets.
+ backend-firestore
+serviceAccountKey.json
+
 node_modules/
 
 *.zip
+ main
