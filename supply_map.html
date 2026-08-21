@@ -1,0 +1,3536 @@
+<!DOCTYPE html>
+<html>
+<head>
+    
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
+    <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.3/dist/leaflet.js"></script>
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Leaflet.awesome-markers/2.0.2/leaflet.awesome-markers.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.3/dist/leaflet.css"/>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.2/dist/css/bootstrap.min.css"/>
+    <link rel="stylesheet" href="https://netdna.bootstrapcdn.com/bootstrap/3.0.0/css/bootstrap-glyphicons.css"/>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.2.0/css/all.min.css"/>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/Leaflet.awesome-markers/2.0.2/leaflet.awesome-markers.css"/>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/python-visualization/folium/folium/templates/leaflet.awesome.rotate.min.css"/>
+    
+            <meta name="viewport" content="width=device-width,
+                initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+            <style>
+                #map_c95fad225fd36fbeb4a2eb1ce317e370 {
+                    position: relative;
+                    width: 100.0%;
+                    height: 100.0%;
+                    left: 0.0%;
+                    top: 0.0%;
+                }
+                .leaflet-container { font-size: 1rem; }
+            </style>
+
+            <style>html, body {
+                width: 100%;
+                height: 100%;
+                margin: 0;
+                padding: 0;
+            }
+            </style>
+
+            <style>#map {
+                position:absolute;
+                top:0;
+                bottom:0;
+                right:0;
+                left:0;
+                }
+            </style>
+
+            <script>
+                L_NO_TOUCH = false;
+                L_DISABLE_3D = false;
+            </script>
+
+        
+</head>
+<body>
+    
+    
+<div style="position: fixed; bottom: 20px; left: 20px; z-index: 9999;
+            background: white; padding: 10px 14px; border-radius: 6px;
+            box-shadow: 0 1px 6px rgba(0,0,0,0.3); font-size: 13px; line-height: 1.6;">
+  <b>Legend</b><br>
+  <span style="color:#d1495b;">&#9679;</span> Harvest-ready farm<br>
+  <span style="color:#8ab17d;">&#9679;</span> Not yet ready<br>
+  <span style="color:#ffb703;">&#9679;</span> Harvest-ready cluster (size = tonnage)<br>
+  <span style="color:#2b6cb0;">&#9675;</span> District crush capacity (size = capacity)
+</div>
+    
+<style>
+  #ca-assumptions-toggle {
+    position: fixed; bottom: 20px; right: 20px; z-index: 10000;
+    background: #2b6cb0; color: white; border: none; border-radius: 6px;
+    padding: 10px 16px; font-size: 13px; font-family: sans-serif;
+    cursor: pointer; box-shadow: 0 1px 6px rgba(0,0,0,0.3);
+  }
+  #ca-assumptions-toggle:hover { background: #235a94; }
+  #ca-assumptions-panel {
+    display: none; position: fixed; top: 0; right: 0; height: 100%;
+    width: 420px; max-width: 90vw; background: white; z-index: 10001;
+    box-shadow: -2px 0 12px rgba(0,0,0,0.25); overflow-y: auto;
+    font-family: sans-serif; padding: 20px;
+  }
+  #ca-assumptions-panel.ca-open { display: block; }
+  #ca-assumptions-panel h2 { font-size: 16px; margin: 0 0 4px 0; }
+  #ca-assumptions-panel p.ca-subtitle {
+    font-size: 12px; color: #666; margin: 0 0 16px 0;
+  }
+  #ca-assumptions-close {
+    position: absolute; top: 16px; right: 18px; background: none;
+    border: none; font-size: 20px; cursor: pointer; color: #666;
+  }
+  .ca-table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+  .ca-table td { padding: 8px 6px; vertical-align: top; border-bottom: 1px solid #eee; }
+  .ca-category-row td {
+    font-weight: 700; font-size: 11px; text-transform: uppercase;
+    letter-spacing: 0.03em; color: #2b6cb0; padding-top: 18px;
+    border-bottom: 2px solid #2b6cb0;
+  }
+  .ca-label { font-weight: 600; width: 45%; }
+  .ca-justification { font-weight: 400; color: #777; margin-top: 3px; font-size: 11.5px; }
+  .ca-value { font-weight: 600; color: #d1495b; white-space: nowrap; }
+  .ca-unit { color: #888; font-size: 11.5px; }
+</style>
+
+<button id="ca-assumptions-toggle" onclick="document.getElementById('ca-assumptions-panel').classList.add('ca-open')">
+  &#9432; Assumptions
+</button>
+
+<div id="ca-assumptions-panel">
+  <button id="ca-assumptions-close" onclick="document.getElementById('ca-assumptions-panel').classList.remove('ca-open')">&times;</button>
+  <h2>Assumptions</h2>
+  <p class="ca-subtitle">Every hardcoded constant used in this build, listed openly rather than buried in code.</p>
+  <table class="ca-table">
+    <tr class="ca-category-row"><td colspan="3">NDVI &amp; Harvest Readiness</td></tr>
+<tr><td class="ca-label">Sugarcane NDVI peak age<div class="ca-justification">Canopy NDVI typically peaks around this crop age before senescence begins.</div></td><td class="ca-value">9.0</td><td class="ca-unit">months</td></tr>
+<tr><td class="ca-label">Minimum crop age for harvest readiness<div class="ca-justification">Below this age the crop is not agronomically ready regardless of NDVI trend.</div></td><td class="ca-value">11</td><td class="ca-unit">months</td></tr>
+<tr><td class="ca-label">NDVI decline threshold (senescence signal)<div class="ca-justification">A drop of at least this size across the 3 pre-fetched scenes signals imminent harvest.</div></td><td class="ca-value">-2.0</td><td class="ca-unit">% change across 3 scenes</td></tr>
+<tr class="ca-category-row"><td colspan="3">Residue Quantification (RPR)</td></tr>
+<tr><td class="ca-label">Bagasse yield factor<div class="ca-justification">Mock RPR range standing in for literature-reported bagasse residue-to-product ratios.</div></td><td class="ca-value">2.8 – 3.6</td><td class="ca-unit">tons per (acreage × age-year factor)</td></tr>
+<tr><td class="ca-label">Leaves/tops yield factor<div class="ca-justification">Mock RPR range for trash/tops residue.</div></td><td class="ca-value">0.9 – 1.4</td><td class="ca-unit">tons per (acreage × age-year factor)</td></tr>
+<tr><td class="ca-label">Press mud yield factor<div class="ca-justification">Mock RPR range for press mud residue.</div></td><td class="ca-value">0.3 – 0.6</td><td class="ca-unit">tons per (acreage × age-year factor)</td></tr>
+<tr class="ca-category-row"><td colspan="3">Spatial Clustering</td></tr>
+<tr><td class="ca-label">DBSCAN neighborhood radius<div class="ca-justification">Farms within this radius are grouped into the same harvest-ready cluster for routing.</div></td><td class="ca-value">0.05</td><td class="ca-unit">degrees (~5.5 km at this latitude)</td></tr>
+<tr><td class="ca-label">DBSCAN minimum cluster size<div class="ca-justification">Below this, a farm becomes its own singleton cluster instead of being dropped as noise.</div></td><td class="ca-value">2</td><td class="ca-unit">farms</td></tr>
+<tr class="ca-category-row"><td colspan="3">District Crush Capacity (mock)</td></tr>
+<tr><td class="ca-label">Active mills per district<div class="ca-justification">Placeholder range until a real mill registry is wired in.</div></td><td class="ca-value">3 – 8</td><td class="ca-unit">mills</td></tr>
+<tr><td class="ca-label">Total crush capacity per district<div class="ca-justification">Placeholder range representing plausible district-level milling capacity.</div></td><td class="ca-value">15,000 – 45,000</td><td class="ca-unit">tons/day</td></tr>
+<tr><td class="ca-label">Current season crush<div class="ca-justification">Placeholder for season-to-date crush volume per district.</div></td><td class="ca-value">400,000 – 1,800,000</td><td class="ca-unit">tons</td></tr>
+<tr><td class="ca-label">Avg. distance to nearest mill<div class="ca-justification">Placeholder transport-distance range, to be replaced once the Logistics Layer (Feature 5) is live.</div></td><td class="ca-value">4 – 28</td><td class="ca-unit">km</td></tr>
+  </table>
+</div>
+    
+            <div class="folium-map" id="map_c95fad225fd36fbeb4a2eb1ce317e370" ></div>
+        
+</body>
+<script>
+    
+    
+            var map_c95fad225fd36fbeb4a2eb1ce317e370 = L.map(
+                "map_c95fad225fd36fbeb4a2eb1ce317e370",
+                {
+                    center: [17.574007499999997, 74.5939982],
+                    crs: L.CRS.EPSG3857,
+                    ...{
+  "zoom": 8,
+  "zoomControl": true,
+  "preferCanvas": false,
+}
+
+                }
+            );
+
+            
+
+        
+    
+            var tile_layer_94f33f7d5dfd95f4ef3b0794ad736f69 = L.tileLayer(
+                "https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png",
+                {
+  "minZoom": 0,
+  "maxZoom": 20,
+  "maxNativeZoom": 20,
+  "noWrap": false,
+  "attribution": "\u0026copy; \u003ca href=\"https://www.openstreetmap.org/copyright\"\u003eOpenStreetMap\u003c/a\u003e contributors \u0026copy; \u003ca href=\"https://carto.com/attributions\"\u003eCARTO\u003c/a\u003e",
+  "subdomains": "abcd",
+  "detectRetina": false,
+  "tms": false,
+  "opacity": 1,
+}
+
+            );
+        
+    
+            tile_layer_94f33f7d5dfd95f4ef3b0794ad736f69.addTo(map_c95fad225fd36fbeb4a2eb1ce317e370);
+        
+    
+            var feature_group_c8a8da1726eaa0f74f1b0f37f09fee0e = L.featureGroup(
+                {
+}
+            );
+        
+    
+            var circle_8a39ddc53b4f6d7c989e0dd313bc696f = L.circle(
+                [19.098597333333334, 74.76747333333333],
+                {"bubblingMouseEvents": true, "color": "#2b6cb0", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#2b6cb0", "fillOpacity": 0.12, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 6605.7, "stroke": true, "weight": 1.5}
+            ).addTo(feature_group_c8a8da1726eaa0f74f1b0f37f09fee0e);
+        
+    
+        var popup_3105da5bfce2886b4cfffc9bfd4c1b2a = L.popup({
+  "maxWidth": 260,
+});
+
+        
+            
+                var html_9e0a3fec122d8d345c0759694852a8e1 = $(`<div id="html_9e0a3fec122d8d345c0759694852a8e1" style="width: 100.0%; height: 100.0%;"><b>Ahmednagar</b><br>Active mills: 7<br>Crush capacity: 44,038 tons/day<br>Season crush so far: 1,571,847 tons<br>Avg. distance to nearest mill: 12.3 km</div>`)[0];
+                popup_3105da5bfce2886b4cfffc9bfd4c1b2a.setContent(html_9e0a3fec122d8d345c0759694852a8e1);
+            
+        
+
+        circle_8a39ddc53b4f6d7c989e0dd313bc696f.bindPopup(popup_3105da5bfce2886b4cfffc9bfd4c1b2a)
+        ;
+
+        
+    
+    
+            var circle_56856af215ac420ba5c02007a20e59eb = L.circle(
+                [16.70915275862069, 74.2550775862069],
+                {"bubblingMouseEvents": true, "color": "#2b6cb0", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#2b6cb0", "fillOpacity": 0.12, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 5842.5, "stroke": true, "weight": 1.5}
+            ).addTo(feature_group_c8a8da1726eaa0f74f1b0f37f09fee0e);
+        
+    
+        var popup_b97421376a6455d3ed137ccca374d48c = L.popup({
+  "maxWidth": 260,
+});
+
+        
+            
+                var html_d165f814188e9635c96523431072e254 = $(`<div id="html_d165f814188e9635c96523431072e254" style="width: 100.0%; height: 100.0%;"><b>Kolhapur</b><br>Active mills: 7<br>Crush capacity: 38,950 tons/day<br>Season crush so far: 1,625,608 tons<br>Avg. distance to nearest mill: 13.4 km</div>`)[0];
+                popup_b97421376a6455d3ed137ccca374d48c.setContent(html_d165f814188e9635c96523431072e254);
+            
+        
+
+        circle_56856af215ac420ba5c02007a20e59eb.bindPopup(popup_b97421376a6455d3ed137ccca374d48c)
+        ;
+
+        
+    
+    
+            var circle_ff914941ca2b82690fa24266af1909d0 = L.circle(
+                [18.496126153846152, 73.83939461538462],
+                {"bubblingMouseEvents": true, "color": "#2b6cb0", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#2b6cb0", "fillOpacity": 0.12, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 5373.75, "stroke": true, "weight": 1.5}
+            ).addTo(feature_group_c8a8da1726eaa0f74f1b0f37f09fee0e);
+        
+    
+        var popup_6d375c091b0b061eba4c91ab0395ccb9 = L.popup({
+  "maxWidth": 260,
+});
+
+        
+            
+                var html_ac3bb8ec08370aabfd9015c1f6f346c6 = $(`<div id="html_ac3bb8ec08370aabfd9015c1f6f346c6" style="width: 100.0%; height: 100.0%;"><b>Pune</b><br>Active mills: 6<br>Crush capacity: 35,825 tons/day<br>Season crush so far: 520,703 tons<br>Avg. distance to nearest mill: 20.7 km</div>`)[0];
+                popup_6d375c091b0b061eba4c91ab0395ccb9.setContent(html_ac3bb8ec08370aabfd9015c1f6f346c6);
+            
+        
+
+        circle_ff914941ca2b82690fa24266af1909d0.bindPopup(popup_6d375c091b0b061eba4c91ab0395ccb9)
+        ;
+
+        
+    
+    
+            var circle_5c1c336deff5c415123c03eb017564e1 = L.circle(
+                [16.849742352941178, 74.5690082352941],
+                {"bubblingMouseEvents": true, "color": "#2b6cb0", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#2b6cb0", "fillOpacity": 0.12, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 2637.45, "stroke": true, "weight": 1.5}
+            ).addTo(feature_group_c8a8da1726eaa0f74f1b0f37f09fee0e);
+        
+    
+        var popup_c5ed9346a566805b90b5e48b89fe7be6 = L.popup({
+  "maxWidth": 260,
+});
+
+        
+            
+                var html_58512b39a7b6f82cc741e377e66fd2ad = $(`<div id="html_58512b39a7b6f82cc741e377e66fd2ad" style="width: 100.0%; height: 100.0%;"><b>Sangli</b><br>Active mills: 4<br>Crush capacity: 17,583 tons/day<br>Season crush so far: 532,164 tons<br>Avg. distance to nearest mill: 20.2 km</div>`)[0];
+                popup_c5ed9346a566805b90b5e48b89fe7be6.setContent(html_58512b39a7b6f82cc741e377e66fd2ad);
+            
+        
+
+        circle_5c1c336deff5c415123c03eb017564e1.bindPopup(popup_c5ed9346a566805b90b5e48b89fe7be6)
+        ;
+
+        
+    
+    
+            var circle_ed955e2c72069e7a3c61071d12df4ea9 = L.circle(
+                [17.67267111111111, 73.99596444444444],
+                {"bubblingMouseEvents": true, "color": "#2b6cb0", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#2b6cb0", "fillOpacity": 0.12, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 6353.099999999999, "stroke": true, "weight": 1.5}
+            ).addTo(feature_group_c8a8da1726eaa0f74f1b0f37f09fee0e);
+        
+    
+        var popup_6bab2e345f1aadddd9a5e510ce46b60d = L.popup({
+  "maxWidth": 260,
+});
+
+        
+            
+                var html_72afe36d7fd2a4d9b44986afaa88b2d4 = $(`<div id="html_72afe36d7fd2a4d9b44986afaa88b2d4" style="width: 100.0%; height: 100.0%;"><b>Satara</b><br>Active mills: 4<br>Crush capacity: 42,354 tons/day<br>Season crush so far: 751,148 tons<br>Avg. distance to nearest mill: 26.3 km</div>`)[0];
+                popup_6bab2e345f1aadddd9a5e510ce46b60d.setContent(html_72afe36d7fd2a4d9b44986afaa88b2d4);
+            
+        
+
+        circle_ed955e2c72069e7a3c61071d12df4ea9.bindPopup(popup_6bab2e345f1aadddd9a5e510ce46b60d)
+        ;
+
+        
+    
+    
+            var circle_b185311e1358e26cd78bd42eb9cfb478 = L.circle(
+                [17.671003529411763, 75.93773647058823],
+                {"bubblingMouseEvents": true, "color": "#2b6cb0", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#2b6cb0", "fillOpacity": 0.12, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 6484.8, "stroke": true, "weight": 1.5}
+            ).addTo(feature_group_c8a8da1726eaa0f74f1b0f37f09fee0e);
+        
+    
+        var popup_fcc64b4580502d02948dd65a0085688b = L.popup({
+  "maxWidth": 260,
+});
+
+        
+            
+                var html_d87e7baad4b5aa174db8f05e9a86d315 = $(`<div id="html_d87e7baad4b5aa174db8f05e9a86d315" style="width: 100.0%; height: 100.0%;"><b>Solapur</b><br>Active mills: 6<br>Crush capacity: 43,232 tons/day<br>Season crush so far: 1,040,432 tons<br>Avg. distance to nearest mill: 20.1 km</div>`)[0];
+                popup_fcc64b4580502d02948dd65a0085688b.setContent(html_d87e7baad4b5aa174db8f05e9a86d315);
+            
+        
+
+        circle_b185311e1358e26cd78bd42eb9cfb478.bindPopup(popup_fcc64b4580502d02948dd65a0085688b)
+        ;
+
+        
+    
+    
+            feature_group_c8a8da1726eaa0f74f1b0f37f09fee0e.addTo(map_c95fad225fd36fbeb4a2eb1ce317e370);
+        
+    
+            var feature_group_5de8ec93113ea8cbf7aa1fc286d80b56 = L.featureGroup(
+                {
+}
+            );
+        
+    
+            var circle_marker_3e050d6fb18ea9cdabecc46eabaf0cc6 = L.circleMarker(
+                [16.71183, 74.62411],
+                {"bubblingMouseEvents": true, "color": "#d1495b", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#d1495b", "fillOpacity": 0.85, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 4, "stroke": true, "weight": 1}
+            ).addTo(feature_group_5de8ec93113ea8cbf7aa1fc286d80b56);
+        
+    
+        var popup_693eaa5c144cf939007a133119361c6b = L.popup({
+  "maxWidth": 220,
+});
+
+        
+            
+                var html_c1627306b3530bf0e3901362c03576c9 = $(`<div id="html_c1627306b3530bf0e3901362c03576c9" style="width: 100.0%; height: 100.0%;"><b>F0001</b> — Sangli<br>Crop age: 14 months<br>NDVI trend: -4.92%<br>Harvest ready: Yes<br>Total residue: 68.8 tons</div>`)[0];
+                popup_693eaa5c144cf939007a133119361c6b.setContent(html_c1627306b3530bf0e3901362c03576c9);
+            
+        
+
+        circle_marker_3e050d6fb18ea9cdabecc46eabaf0cc6.bindPopup(popup_693eaa5c144cf939007a133119361c6b)
+        ;
+
+        
+    
+    
+            var circle_marker_271603d93f480272b1f1dc6db2dc0196 = L.circleMarker(
+                [17.72142, 73.89354],
+                {"bubblingMouseEvents": true, "color": "#8ab17d", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#8ab17d", "fillOpacity": 0.5, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 3, "stroke": true, "weight": 1}
+            ).addTo(feature_group_5de8ec93113ea8cbf7aa1fc286d80b56);
+        
+    
+        var popup_f3ee5ea8b21d54697143a9f696688961 = L.popup({
+  "maxWidth": 220,
+});
+
+        
+            
+                var html_097ca05851265ecca42e677b306fa44d = $(`<div id="html_097ca05851265ecca42e677b306fa44d" style="width: 100.0%; height: 100.0%;"><b>F0002</b> — Satara<br>Crop age: 11 months<br>NDVI trend: -0.37%<br>Harvest ready: No<br>Total residue: 13.6 tons</div>`)[0];
+                popup_f3ee5ea8b21d54697143a9f696688961.setContent(html_097ca05851265ecca42e677b306fa44d);
+            
+        
+
+        circle_marker_271603d93f480272b1f1dc6db2dc0196.bindPopup(popup_f3ee5ea8b21d54697143a9f696688961)
+        ;
+
+        
+    
+    
+            var circle_marker_5386b6f6a68cb95e232a20b47a60423f = L.circleMarker(
+                [18.46471, 73.75519],
+                {"bubblingMouseEvents": true, "color": "#d1495b", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#d1495b", "fillOpacity": 0.85, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 4, "stroke": true, "weight": 1}
+            ).addTo(feature_group_5de8ec93113ea8cbf7aa1fc286d80b56);
+        
+    
+        var popup_e8185b034579bfe8160e8660a85d70e4 = L.popup({
+  "maxWidth": 220,
+});
+
+        
+            
+                var html_b436f5e01cc6ef148604ae4c8312ed74 = $(`<div id="html_b436f5e01cc6ef148604ae4c8312ed74" style="width: 100.0%; height: 100.0%;"><b>F0003</b> — Pune<br>Crop age: 15 months<br>NDVI trend: -5.79%<br>Harvest ready: Yes<br>Total residue: 65.4 tons</div>`)[0];
+                popup_e8185b034579bfe8160e8660a85d70e4.setContent(html_b436f5e01cc6ef148604ae4c8312ed74);
+            
+        
+
+        circle_marker_5386b6f6a68cb95e232a20b47a60423f.bindPopup(popup_e8185b034579bfe8160e8660a85d70e4)
+        ;
+
+        
+    
+    
+            var circle_marker_6a6f62c0a0b9fc04f517a8d0c8ff6d6e = L.circleMarker(
+                [17.66247, 76.02597],
+                {"bubblingMouseEvents": true, "color": "#d1495b", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#d1495b", "fillOpacity": 0.85, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 4, "stroke": true, "weight": 1}
+            ).addTo(feature_group_5de8ec93113ea8cbf7aa1fc286d80b56);
+        
+    
+        var popup_57774dee2b4e3a03002cab14af292d7a = L.popup({
+  "maxWidth": 220,
+});
+
+        
+            
+                var html_bba1164bcaea531ed94f03601477e623 = $(`<div id="html_bba1164bcaea531ed94f03601477e623" style="width: 100.0%; height: 100.0%;"><b>F0004</b> — Solapur<br>Crop age: 12 months<br>NDVI trend: -5.23%<br>Harvest ready: Yes<br>Total residue: 75.8 tons</div>`)[0];
+                popup_57774dee2b4e3a03002cab14af292d7a.setContent(html_bba1164bcaea531ed94f03601477e623);
+            
+        
+
+        circle_marker_6a6f62c0a0b9fc04f517a8d0c8ff6d6e.bindPopup(popup_57774dee2b4e3a03002cab14af292d7a)
+        ;
+
+        
+    
+    
+            var circle_marker_9754e8aa15e2c80dc1ed5b27d4ec1aff = L.circleMarker(
+                [16.82727, 74.27523],
+                {"bubblingMouseEvents": true, "color": "#8ab17d", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#8ab17d", "fillOpacity": 0.5, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 3, "stroke": true, "weight": 1}
+            ).addTo(feature_group_5de8ec93113ea8cbf7aa1fc286d80b56);
+        
+    
+        var popup_b05a9653b5f6d05c029dd9ff3d622801 = L.popup({
+  "maxWidth": 220,
+});
+
+        
+            
+                var html_3b8776d41d145fe00b3d4835b8eb8b6c = $(`<div id="html_3b8776d41d145fe00b3d4835b8eb8b6c" style="width: 100.0%; height: 100.0%;"><b>F0005</b> — Kolhapur<br>Crop age: 14 months<br>NDVI trend: 6.39%<br>Harvest ready: No<br>Total residue: 90.7 tons</div>`)[0];
+                popup_b05a9653b5f6d05c029dd9ff3d622801.setContent(html_3b8776d41d145fe00b3d4835b8eb8b6c);
+            
+        
+
+        circle_marker_9754e8aa15e2c80dc1ed5b27d4ec1aff.bindPopup(popup_b05a9653b5f6d05c029dd9ff3d622801)
+        ;
+
+        
+    
+    
+            var circle_marker_d6aadbe7fb12558f81a184494d4af362 = L.circleMarker(
+                [16.62979, 74.09606],
+                {"bubblingMouseEvents": true, "color": "#d1495b", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#d1495b", "fillOpacity": 0.85, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 4, "stroke": true, "weight": 1}
+            ).addTo(feature_group_5de8ec93113ea8cbf7aa1fc286d80b56);
+        
+    
+        var popup_1e5f6bb7d0d401df25b4580fe7a52e3a = L.popup({
+  "maxWidth": 220,
+});
+
+        
+            
+                var html_08d80cf41d916ee781dfcf908ad07aa6 = $(`<div id="html_08d80cf41d916ee781dfcf908ad07aa6" style="width: 100.0%; height: 100.0%;"><b>F0006</b> — Kolhapur<br>Crop age: 17 months<br>NDVI trend: -9.63%<br>Harvest ready: Yes<br>Total residue: 109.1 tons</div>`)[0];
+                popup_1e5f6bb7d0d401df25b4580fe7a52e3a.setContent(html_08d80cf41d916ee781dfcf908ad07aa6);
+            
+        
+
+        circle_marker_d6aadbe7fb12558f81a184494d4af362.bindPopup(popup_1e5f6bb7d0d401df25b4580fe7a52e3a)
+        ;
+
+        
+    
+    
+            var circle_marker_0de0db50c2a0ef2f70e77890d765a8c1 = L.circleMarker(
+                [16.67811, 74.12374],
+                {"bubblingMouseEvents": true, "color": "#8ab17d", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#8ab17d", "fillOpacity": 0.5, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 3, "stroke": true, "weight": 1}
+            ).addTo(feature_group_5de8ec93113ea8cbf7aa1fc286d80b56);
+        
+    
+        var popup_413ccb208ec55071c1ad4d2719f55a67 = L.popup({
+  "maxWidth": 220,
+});
+
+        
+            
+                var html_89753abf49778fa04422e31499bff88d = $(`<div id="html_89753abf49778fa04422e31499bff88d" style="width: 100.0%; height: 100.0%;"><b>F0007</b> — Kolhapur<br>Crop age: 10 months<br>NDVI trend: -6.09%<br>Harvest ready: No<br>Total residue: 33.4 tons</div>`)[0];
+                popup_413ccb208ec55071c1ad4d2719f55a67.setContent(html_89753abf49778fa04422e31499bff88d);
+            
+        
+
+        circle_marker_0de0db50c2a0ef2f70e77890d765a8c1.bindPopup(popup_413ccb208ec55071c1ad4d2719f55a67)
+        ;
+
+        
+    
+    
+            var circle_marker_56b7ea98fe49f08a36723609ed8313b7 = L.circleMarker(
+                [19.17147, 74.79705],
+                {"bubblingMouseEvents": true, "color": "#d1495b", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#d1495b", "fillOpacity": 0.85, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 4, "stroke": true, "weight": 1}
+            ).addTo(feature_group_5de8ec93113ea8cbf7aa1fc286d80b56);
+        
+    
+        var popup_eb55ba82ac2f84f65ca3f6d1605be4f9 = L.popup({
+  "maxWidth": 220,
+});
+
+        
+            
+                var html_6b41bc8e0eb36bdf53636c70540f8c37 = $(`<div id="html_6b41bc8e0eb36bdf53636c70540f8c37" style="width: 100.0%; height: 100.0%;"><b>F0008</b> — Ahmednagar<br>Crop age: 14 months<br>NDVI trend: -6.43%<br>Harvest ready: Yes<br>Total residue: 83.4 tons</div>`)[0];
+                popup_eb55ba82ac2f84f65ca3f6d1605be4f9.setContent(html_6b41bc8e0eb36bdf53636c70540f8c37);
+            
+        
+
+        circle_marker_56b7ea98fe49f08a36723609ed8313b7.bindPopup(popup_eb55ba82ac2f84f65ca3f6d1605be4f9)
+        ;
+
+        
+    
+    
+            var circle_marker_109be3cb86073963021101a1ed60078c = L.circleMarker(
+                [18.43904, 73.70822],
+                {"bubblingMouseEvents": true, "color": "#8ab17d", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#8ab17d", "fillOpacity": 0.5, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 3, "stroke": true, "weight": 1}
+            ).addTo(feature_group_5de8ec93113ea8cbf7aa1fc286d80b56);
+        
+    
+        var popup_97de2e3a5c00c5195f8cc3d6dc769c17 = L.popup({
+  "maxWidth": 220,
+});
+
+        
+            
+                var html_c079d6dd4bd17f756a0ca3cab0aecb2d = $(`<div id="html_c079d6dd4bd17f756a0ca3cab0aecb2d" style="width: 100.0%; height: 100.0%;"><b>F0009</b> — Pune<br>Crop age: 15 months<br>NDVI trend: -0.88%<br>Harvest ready: No<br>Total residue: 66.2 tons</div>`)[0];
+                popup_97de2e3a5c00c5195f8cc3d6dc769c17.setContent(html_c079d6dd4bd17f756a0ca3cab0aecb2d);
+            
+        
+
+        circle_marker_109be3cb86073963021101a1ed60078c.bindPopup(popup_97de2e3a5c00c5195f8cc3d6dc769c17)
+        ;
+
+        
+    
+    
+            var circle_marker_11d88988d9681b33aaa6bf1503da9ebc = L.circleMarker(
+                [18.39349, 73.75494],
+                {"bubblingMouseEvents": true, "color": "#d1495b", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#d1495b", "fillOpacity": 0.85, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 4, "stroke": true, "weight": 1}
+            ).addTo(feature_group_5de8ec93113ea8cbf7aa1fc286d80b56);
+        
+    
+        var popup_537a7c7c9045d01278390704c56cd2c3 = L.popup({
+  "maxWidth": 220,
+});
+
+        
+            
+                var html_6faabc3cdc135f276e15141e9842de6f = $(`<div id="html_6faabc3cdc135f276e15141e9842de6f" style="width: 100.0%; height: 100.0%;"><b>F0010</b> — Pune<br>Crop age: 12 months<br>NDVI trend: -3.68%<br>Harvest ready: Yes<br>Total residue: 123.5 tons</div>`)[0];
+                popup_537a7c7c9045d01278390704c56cd2c3.setContent(html_6faabc3cdc135f276e15141e9842de6f);
+            
+        
+
+        circle_marker_11d88988d9681b33aaa6bf1503da9ebc.bindPopup(popup_537a7c7c9045d01278390704c56cd2c3)
+        ;
+
+        
+    
+    
+            var circle_marker_724a2de99fbb4de54da0be125d0caab5 = L.circleMarker(
+                [16.64193, 74.25792],
+                {"bubblingMouseEvents": true, "color": "#d1495b", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#d1495b", "fillOpacity": 0.85, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 4, "stroke": true, "weight": 1}
+            ).addTo(feature_group_5de8ec93113ea8cbf7aa1fc286d80b56);
+        
+    
+        var popup_cd76e730bae3421279a7e3e05b8eb9d4 = L.popup({
+  "maxWidth": 220,
+});
+
+        
+            
+                var html_fdefb3ccdab582c10f826719a863019e = $(`<div id="html_fdefb3ccdab582c10f826719a863019e" style="width: 100.0%; height: 100.0%;"><b>F0011</b> — Kolhapur<br>Crop age: 11 months<br>NDVI trend: -9.76%<br>Harvest ready: Yes<br>Total residue: 83.0 tons</div>`)[0];
+                popup_cd76e730bae3421279a7e3e05b8eb9d4.setContent(html_fdefb3ccdab582c10f826719a863019e);
+            
+        
+
+        circle_marker_724a2de99fbb4de54da0be125d0caab5.bindPopup(popup_cd76e730bae3421279a7e3e05b8eb9d4)
+        ;
+
+        
+    
+    
+            var circle_marker_ebc1f74839683d089251f6c2b426f11b = L.circleMarker(
+                [17.57887, 74.07587],
+                {"bubblingMouseEvents": true, "color": "#d1495b", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#d1495b", "fillOpacity": 0.85, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 4, "stroke": true, "weight": 1}
+            ).addTo(feature_group_5de8ec93113ea8cbf7aa1fc286d80b56);
+        
+    
+        var popup_54f70a01d619e706f5c29fbc6cebba00 = L.popup({
+  "maxWidth": 220,
+});
+
+        
+            
+                var html_cf34af9e3f30e08ce90f1b54e55a20e5 = $(`<div id="html_cf34af9e3f30e08ce90f1b54e55a20e5" style="width: 100.0%; height: 100.0%;"><b>F0012</b> — Satara<br>Crop age: 15 months<br>NDVI trend: -6.83%<br>Harvest ready: Yes<br>Total residue: 107.5 tons</div>`)[0];
+                popup_54f70a01d619e706f5c29fbc6cebba00.setContent(html_cf34af9e3f30e08ce90f1b54e55a20e5);
+            
+        
+
+        circle_marker_ebc1f74839683d089251f6c2b426f11b.bindPopup(popup_54f70a01d619e706f5c29fbc6cebba00)
+        ;
+
+        
+    
+    
+            var circle_marker_ed02eaaa0f5605d6d8bc8eb74483fd39 = L.circleMarker(
+                [19.22371, 74.79359],
+                {"bubblingMouseEvents": true, "color": "#d1495b", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#d1495b", "fillOpacity": 0.85, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 4, "stroke": true, "weight": 1}
+            ).addTo(feature_group_5de8ec93113ea8cbf7aa1fc286d80b56);
+        
+    
+        var popup_1e93fce7584d5b9911f28934f3a183a5 = L.popup({
+  "maxWidth": 220,
+});
+
+        
+            
+                var html_7765b915185d35428af4ca48db4ae76d = $(`<div id="html_7765b915185d35428af4ca48db4ae76d" style="width: 100.0%; height: 100.0%;"><b>F0013</b> — Ahmednagar<br>Crop age: 15 months<br>NDVI trend: -4.73%<br>Harvest ready: Yes<br>Total residue: 41.3 tons</div>`)[0];
+                popup_1e93fce7584d5b9911f28934f3a183a5.setContent(html_7765b915185d35428af4ca48db4ae76d);
+            
+        
+
+        circle_marker_ed02eaaa0f5605d6d8bc8eb74483fd39.bindPopup(popup_1e93fce7584d5b9911f28934f3a183a5)
+        ;
+
+        
+    
+    
+            var circle_marker_0450bcea711d8b3740ffaacd27f908cb = L.circleMarker(
+                [16.79744, 74.16058],
+                {"bubblingMouseEvents": true, "color": "#8ab17d", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#8ab17d", "fillOpacity": 0.5, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 3, "stroke": true, "weight": 1}
+            ).addTo(feature_group_5de8ec93113ea8cbf7aa1fc286d80b56);
+        
+    
+        var popup_7d87f5b4d50089a12813bcc49d2c42b3 = L.popup({
+  "maxWidth": 220,
+});
+
+        
+            
+                var html_a557835d7e22b9ca13b3262d8fddfc3c = $(`<div id="html_a557835d7e22b9ca13b3262d8fddfc3c" style="width: 100.0%; height: 100.0%;"><b>F0014</b> — Kolhapur<br>Crop age: 10 months<br>NDVI trend: -1.19%<br>Harvest ready: No<br>Total residue: 28.7 tons</div>`)[0];
+                popup_7d87f5b4d50089a12813bcc49d2c42b3.setContent(html_a557835d7e22b9ca13b3262d8fddfc3c);
+            
+        
+
+        circle_marker_0450bcea711d8b3740ffaacd27f908cb.bindPopup(popup_7d87f5b4d50089a12813bcc49d2c42b3)
+        ;
+
+        
+    
+    
+            var circle_marker_3f4cec05988032106d596b892e7220e9 = L.circleMarker(
+                [16.74502, 74.30695],
+                {"bubblingMouseEvents": true, "color": "#8ab17d", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#8ab17d", "fillOpacity": 0.5, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 3, "stroke": true, "weight": 1}
+            ).addTo(feature_group_5de8ec93113ea8cbf7aa1fc286d80b56);
+        
+    
+        var popup_e618f12bbe02d98122f68a710b3d8a52 = L.popup({
+  "maxWidth": 220,
+});
+
+        
+            
+                var html_92c32bacbd7b63a2af5406f9095e0301 = $(`<div id="html_92c32bacbd7b63a2af5406f9095e0301" style="width: 100.0%; height: 100.0%;"><b>F0015</b> — Kolhapur<br>Crop age: 13 months<br>NDVI trend: -1.86%<br>Harvest ready: No<br>Total residue: 10.3 tons</div>`)[0];
+                popup_e618f12bbe02d98122f68a710b3d8a52.setContent(html_92c32bacbd7b63a2af5406f9095e0301);
+            
+        
+
+        circle_marker_3f4cec05988032106d596b892e7220e9.bindPopup(popup_e618f12bbe02d98122f68a710b3d8a52)
+        ;
+
+        
+    
+    
+            var circle_marker_0e959abc3306452b27fe3742912b1d08 = L.circleMarker(
+                [16.81644, 74.16447],
+                {"bubblingMouseEvents": true, "color": "#d1495b", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#d1495b", "fillOpacity": 0.85, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 4, "stroke": true, "weight": 1}
+            ).addTo(feature_group_5de8ec93113ea8cbf7aa1fc286d80b56);
+        
+    
+        var popup_8137f31aefd9ffc896ca5a59cb451204 = L.popup({
+  "maxWidth": 220,
+});
+
+        
+            
+                var html_b2a365a440cad707830ffdb268ee55e7 = $(`<div id="html_b2a365a440cad707830ffdb268ee55e7" style="width: 100.0%; height: 100.0%;"><b>F0016</b> — Kolhapur<br>Crop age: 12 months<br>NDVI trend: -4.63%<br>Harvest ready: Yes<br>Total residue: 92.3 tons</div>`)[0];
+                popup_8137f31aefd9ffc896ca5a59cb451204.setContent(html_b2a365a440cad707830ffdb268ee55e7);
+            
+        
+
+        circle_marker_0e959abc3306452b27fe3742912b1d08.bindPopup(popup_8137f31aefd9ffc896ca5a59cb451204)
+        ;
+
+        
+    
+    
+            var circle_marker_319fb6ccce90db9fbeefebfed5ebc611 = L.circleMarker(
+                [16.9435, 74.52912],
+                {"bubblingMouseEvents": true, "color": "#8ab17d", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#8ab17d", "fillOpacity": 0.5, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 3, "stroke": true, "weight": 1}
+            ).addTo(feature_group_5de8ec93113ea8cbf7aa1fc286d80b56);
+        
+    
+        var popup_46340eb646a6a600bcf69de19d505e11 = L.popup({
+  "maxWidth": 220,
+});
+
+        
+            
+                var html_c25bbce4ce7d470a92765c0bd2bae632 = $(`<div id="html_c25bbce4ce7d470a92765c0bd2bae632" style="width: 100.0%; height: 100.0%;"><b>F0017</b> — Sangli<br>Crop age: 9 months<br>NDVI trend: -1.75%<br>Harvest ready: No<br>Total residue: 12.8 tons</div>`)[0];
+                popup_46340eb646a6a600bcf69de19d505e11.setContent(html_c25bbce4ce7d470a92765c0bd2bae632);
+            
+        
+
+        circle_marker_319fb6ccce90db9fbeefebfed5ebc611.bindPopup(popup_46340eb646a6a600bcf69de19d505e11)
+        ;
+
+        
+    
+    
+            var circle_marker_9b97856f03679645348d2d36d3317771 = L.circleMarker(
+                [17.56587, 75.98035],
+                {"bubblingMouseEvents": true, "color": "#d1495b", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#d1495b", "fillOpacity": 0.85, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 4, "stroke": true, "weight": 1}
+            ).addTo(feature_group_5de8ec93113ea8cbf7aa1fc286d80b56);
+        
+    
+        var popup_6dc0a2c13648fafadc6e39f2b80b98fe = L.popup({
+  "maxWidth": 220,
+});
+
+        
+            
+                var html_14ec420a9e2e812119b0d89ac3731fb1 = $(`<div id="html_14ec420a9e2e812119b0d89ac3731fb1" style="width: 100.0%; height: 100.0%;"><b>F0018</b> — Solapur<br>Crop age: 15 months<br>NDVI trend: -8.33%<br>Harvest ready: Yes<br>Total residue: 68.3 tons</div>`)[0];
+                popup_6dc0a2c13648fafadc6e39f2b80b98fe.setContent(html_14ec420a9e2e812119b0d89ac3731fb1);
+            
+        
+
+        circle_marker_9b97856f03679645348d2d36d3317771.bindPopup(popup_6dc0a2c13648fafadc6e39f2b80b98fe)
+        ;
+
+        
+    
+    
+            var circle_marker_ccde95d00d180220967a4e0d3de43a04 = L.circleMarker(
+                [17.77767, 75.95129],
+                {"bubblingMouseEvents": true, "color": "#8ab17d", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#8ab17d", "fillOpacity": 0.5, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 3, "stroke": true, "weight": 1}
+            ).addTo(feature_group_5de8ec93113ea8cbf7aa1fc286d80b56);
+        
+    
+        var popup_632d074e0d14350242616d94f7fb025f = L.popup({
+  "maxWidth": 220,
+});
+
+        
+            
+                var html_9f7ed0bc8387075ee6bda0f190ee3e49 = $(`<div id="html_9f7ed0bc8387075ee6bda0f190ee3e49" style="width: 100.0%; height: 100.0%;"><b>F0019</b> — Solapur<br>Crop age: 13 months<br>NDVI trend: -0.82%<br>Harvest ready: No<br>Total residue: 31.1 tons</div>`)[0];
+                popup_632d074e0d14350242616d94f7fb025f.setContent(html_9f7ed0bc8387075ee6bda0f190ee3e49);
+            
+        
+
+        circle_marker_ccde95d00d180220967a4e0d3de43a04.bindPopup(popup_632d074e0d14350242616d94f7fb025f)
+        ;
+
+        
+    
+    
+            var circle_marker_3c4925730b9dd67ee3321f6ff53f5c09 = L.circleMarker(
+                [16.8642, 74.68627],
+                {"bubblingMouseEvents": true, "color": "#8ab17d", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#8ab17d", "fillOpacity": 0.5, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 3, "stroke": true, "weight": 1}
+            ).addTo(feature_group_5de8ec93113ea8cbf7aa1fc286d80b56);
+        
+    
+        var popup_53f1fa4e602c460de19cbb4a92bd8fde = L.popup({
+  "maxWidth": 220,
+});
+
+        
+            
+                var html_10a86b039ddaabc77c1aa92577caa436 = $(`<div id="html_10a86b039ddaabc77c1aa92577caa436" style="width: 100.0%; height: 100.0%;"><b>F0020</b> — Sangli<br>Crop age: 9 months<br>NDVI trend: 3.7%<br>Harvest ready: No<br>Total residue: 78.6 tons</div>`)[0];
+                popup_53f1fa4e602c460de19cbb4a92bd8fde.setContent(html_10a86b039ddaabc77c1aa92577caa436);
+            
+        
+
+        circle_marker_3c4925730b9dd67ee3321f6ff53f5c09.bindPopup(popup_53f1fa4e602c460de19cbb4a92bd8fde)
+        ;
+
+        
+    
+    
+            var circle_marker_0ec9a1883ea41a12b37441ac352c4bcc = L.circleMarker(
+                [18.61263, 73.90398],
+                {"bubblingMouseEvents": true, "color": "#d1495b", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#d1495b", "fillOpacity": 0.85, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 4, "stroke": true, "weight": 1}
+            ).addTo(feature_group_5de8ec93113ea8cbf7aa1fc286d80b56);
+        
+    
+        var popup_478b98b145c2cc253ce2987b86222c15 = L.popup({
+  "maxWidth": 220,
+});
+
+        
+            
+                var html_f80c01be8392d806ce5ae77acd445fde = $(`<div id="html_f80c01be8392d806ce5ae77acd445fde" style="width: 100.0%; height: 100.0%;"><b>F0021</b> — Pune<br>Crop age: 12 months<br>NDVI trend: -11.06%<br>Harvest ready: Yes<br>Total residue: 61.9 tons</div>`)[0];
+                popup_478b98b145c2cc253ce2987b86222c15.setContent(html_f80c01be8392d806ce5ae77acd445fde);
+            
+        
+
+        circle_marker_0ec9a1883ea41a12b37441ac352c4bcc.bindPopup(popup_478b98b145c2cc253ce2987b86222c15)
+        ;
+
+        
+    
+    
+            var circle_marker_6911f79547549929edc78f020a6342a1 = L.circleMarker(
+                [16.82383, 74.26379],
+                {"bubblingMouseEvents": true, "color": "#8ab17d", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#8ab17d", "fillOpacity": 0.5, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 3, "stroke": true, "weight": 1}
+            ).addTo(feature_group_5de8ec93113ea8cbf7aa1fc286d80b56);
+        
+    
+        var popup_9a3c9f8f6ee512caa7efd3cd823fa180 = L.popup({
+  "maxWidth": 220,
+});
+
+        
+            
+                var html_7c84fd6fa4b5d7da5e0796662cc331b6 = $(`<div id="html_7c84fd6fa4b5d7da5e0796662cc331b6" style="width: 100.0%; height: 100.0%;"><b>F0022</b> — Kolhapur<br>Crop age: 8 months<br>NDVI trend: 2.34%<br>Harvest ready: No<br>Total residue: 50.2 tons</div>`)[0];
+                popup_9a3c9f8f6ee512caa7efd3cd823fa180.setContent(html_7c84fd6fa4b5d7da5e0796662cc331b6);
+            
+        
+
+        circle_marker_6911f79547549929edc78f020a6342a1.bindPopup(popup_9a3c9f8f6ee512caa7efd3cd823fa180)
+        ;
+
+        
+    
+    
+            var circle_marker_0eb88d74893e74e3e2b7367194b81b79 = L.circleMarker(
+                [16.7978, 74.4596],
+                {"bubblingMouseEvents": true, "color": "#8ab17d", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#8ab17d", "fillOpacity": 0.5, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 3, "stroke": true, "weight": 1}
+            ).addTo(feature_group_5de8ec93113ea8cbf7aa1fc286d80b56);
+        
+    
+        var popup_3b835c94ac23e611b96dc10bd82c0805 = L.popup({
+  "maxWidth": 220,
+});
+
+        
+            
+                var html_1c52554e2c8507a1067bb3fdad606298 = $(`<div id="html_1c52554e2c8507a1067bb3fdad606298" style="width: 100.0%; height: 100.0%;"><b>F0023</b> — Sangli<br>Crop age: 17 months<br>NDVI trend: -1.8%<br>Harvest ready: No<br>Total residue: 107.4 tons</div>`)[0];
+                popup_3b835c94ac23e611b96dc10bd82c0805.setContent(html_1c52554e2c8507a1067bb3fdad606298);
+            
+        
+
+        circle_marker_0eb88d74893e74e3e2b7367194b81b79.bindPopup(popup_3b835c94ac23e611b96dc10bd82c0805)
+        ;
+
+        
+    
+    
+            var circle_marker_2c9d09329570500aeb8f273f7fc137b3 = L.circleMarker(
+                [16.73542, 74.54181],
+                {"bubblingMouseEvents": true, "color": "#d1495b", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#d1495b", "fillOpacity": 0.85, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 4, "stroke": true, "weight": 1}
+            ).addTo(feature_group_5de8ec93113ea8cbf7aa1fc286d80b56);
+        
+    
+        var popup_900acf563580f264aef17a71f79adf57 = L.popup({
+  "maxWidth": 220,
+});
+
+        
+            
+                var html_6b14797822c43dd0b9bc2fb23ef240e8 = $(`<div id="html_6b14797822c43dd0b9bc2fb23ef240e8" style="width: 100.0%; height: 100.0%;"><b>F0024</b> — Sangli<br>Crop age: 13 months<br>NDVI trend: -4.8%<br>Harvest ready: Yes<br>Total residue: 23.3 tons</div>`)[0];
+                popup_900acf563580f264aef17a71f79adf57.setContent(html_6b14797822c43dd0b9bc2fb23ef240e8);
+            
+        
+
+        circle_marker_2c9d09329570500aeb8f273f7fc137b3.bindPopup(popup_900acf563580f264aef17a71f79adf57)
+        ;
+
+        
+    
+    
+            var circle_marker_96f06fb3f84d25e8a41061f09ed66b4a = L.circleMarker(
+                [17.57828, 75.83596],
+                {"bubblingMouseEvents": true, "color": "#d1495b", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#d1495b", "fillOpacity": 0.85, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 4, "stroke": true, "weight": 1}
+            ).addTo(feature_group_5de8ec93113ea8cbf7aa1fc286d80b56);
+        
+    
+        var popup_e586f5f9989f408142ddd849a20164e4 = L.popup({
+  "maxWidth": 220,
+});
+
+        
+            
+                var html_b89f68e34f37699574d8d19dd46e4afd = $(`<div id="html_b89f68e34f37699574d8d19dd46e4afd" style="width: 100.0%; height: 100.0%;"><b>F0025</b> — Solapur<br>Crop age: 16 months<br>NDVI trend: -8.2%<br>Harvest ready: Yes<br>Total residue: 96.6 tons</div>`)[0];
+                popup_e586f5f9989f408142ddd849a20164e4.setContent(html_b89f68e34f37699574d8d19dd46e4afd);
+            
+        
+
+        circle_marker_96f06fb3f84d25e8a41061f09ed66b4a.bindPopup(popup_e586f5f9989f408142ddd849a20164e4)
+        ;
+
+        
+    
+    
+            var circle_marker_4e6c2e9acc4803dbb74e415df645b69f = L.circleMarker(
+                [19.07293, 74.6712],
+                {"bubblingMouseEvents": true, "color": "#8ab17d", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#8ab17d", "fillOpacity": 0.5, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 3, "stroke": true, "weight": 1}
+            ).addTo(feature_group_5de8ec93113ea8cbf7aa1fc286d80b56);
+        
+    
+        var popup_227397b9f2fcfedb84626071606d5efc = L.popup({
+  "maxWidth": 220,
+});
+
+        
+            
+                var html_5d3baf2c82bb12638bf5a8e68fc00a9f = $(`<div id="html_5d3baf2c82bb12638bf5a8e68fc00a9f" style="width: 100.0%; height: 100.0%;"><b>F0026</b> — Ahmednagar<br>Crop age: 8 months<br>NDVI trend: 2.96%<br>Harvest ready: No<br>Total residue: 49.1 tons</div>`)[0];
+                popup_227397b9f2fcfedb84626071606d5efc.setContent(html_5d3baf2c82bb12638bf5a8e68fc00a9f);
+            
+        
+
+        circle_marker_4e6c2e9acc4803dbb74e415df645b69f.bindPopup(popup_227397b9f2fcfedb84626071606d5efc)
+        ;
+
+        
+    
+    
+            var circle_marker_515e934352ebc7f81fcf58c095573493 = L.circleMarker(
+                [16.8004, 74.3852],
+                {"bubblingMouseEvents": true, "color": "#d1495b", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#d1495b", "fillOpacity": 0.85, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 4, "stroke": true, "weight": 1}
+            ).addTo(feature_group_5de8ec93113ea8cbf7aa1fc286d80b56);
+        
+    
+        var popup_1c8e6c97d9534d4a6a33399120835d69 = L.popup({
+  "maxWidth": 220,
+});
+
+        
+            
+                var html_6cf0e8bd1921498e91f44f4e4ec4cccb = $(`<div id="html_6cf0e8bd1921498e91f44f4e4ec4cccb" style="width: 100.0%; height: 100.0%;"><b>F0027</b> — Kolhapur<br>Crop age: 17 months<br>NDVI trend: -7.7%<br>Harvest ready: Yes<br>Total residue: 41.4 tons</div>`)[0];
+                popup_1c8e6c97d9534d4a6a33399120835d69.setContent(html_6cf0e8bd1921498e91f44f4e4ec4cccb);
+            
+        
+
+        circle_marker_515e934352ebc7f81fcf58c095573493.bindPopup(popup_1c8e6c97d9534d4a6a33399120835d69)
+        ;
+
+        
+    
+    
+            var circle_marker_3669ca62ec06a61584162c19425e5f0c = L.circleMarker(
+                [17.76812, 75.87433],
+                {"bubblingMouseEvents": true, "color": "#8ab17d", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#8ab17d", "fillOpacity": 0.5, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 3, "stroke": true, "weight": 1}
+            ).addTo(feature_group_5de8ec93113ea8cbf7aa1fc286d80b56);
+        
+    
+        var popup_d08932e3c553a94812e9dccc7e7c4bff = L.popup({
+  "maxWidth": 220,
+});
+
+        
+            
+                var html_4bb1aa802c54e546dd2e9d44f063015d = $(`<div id="html_4bb1aa802c54e546dd2e9d44f063015d" style="width: 100.0%; height: 100.0%;"><b>F0028</b> — Solapur<br>Crop age: 10 months<br>NDVI trend: -7.98%<br>Harvest ready: No<br>Total residue: 95.6 tons</div>`)[0];
+                popup_d08932e3c553a94812e9dccc7e7c4bff.setContent(html_4bb1aa802c54e546dd2e9d44f063015d);
+            
+        
+
+        circle_marker_3669ca62ec06a61584162c19425e5f0c.bindPopup(popup_d08932e3c553a94812e9dccc7e7c4bff)
+        ;
+
+        
+    
+    
+            var circle_marker_0b420b8b181a8d096de309a809f47048 = L.circleMarker(
+                [17.51199, 76.02401],
+                {"bubblingMouseEvents": true, "color": "#8ab17d", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#8ab17d", "fillOpacity": 0.5, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 3, "stroke": true, "weight": 1}
+            ).addTo(feature_group_5de8ec93113ea8cbf7aa1fc286d80b56);
+        
+    
+        var popup_56617b8dff4bd05a03f45c5c575282d0 = L.popup({
+  "maxWidth": 220,
+});
+
+        
+            
+                var html_ff870f3e8faabf42891f15d76d620b54 = $(`<div id="html_ff870f3e8faabf42891f15d76d620b54" style="width: 100.0%; height: 100.0%;"><b>F0029</b> — Solapur<br>Crop age: 14 months<br>NDVI trend: 3.94%<br>Harvest ready: No<br>Total residue: 89.8 tons</div>`)[0];
+                popup_56617b8dff4bd05a03f45c5c575282d0.setContent(html_ff870f3e8faabf42891f15d76d620b54);
+            
+        
+
+        circle_marker_0b420b8b181a8d096de309a809f47048.bindPopup(popup_56617b8dff4bd05a03f45c5c575282d0)
+        ;
+
+        
+    
+    
+            var circle_marker_564cb6275f276dad59b5ce4e85404dfc = L.circleMarker(
+                [16.70822, 74.28264],
+                {"bubblingMouseEvents": true, "color": "#d1495b", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#d1495b", "fillOpacity": 0.85, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 4, "stroke": true, "weight": 1}
+            ).addTo(feature_group_5de8ec93113ea8cbf7aa1fc286d80b56);
+        
+    
+        var popup_415d65fe0219377545ce4e3a0b00874e = L.popup({
+  "maxWidth": 220,
+});
+
+        
+            
+                var html_e14b8a3faffc6230c2312c98a51b8daf = $(`<div id="html_e14b8a3faffc6230c2312c98a51b8daf" style="width: 100.0%; height: 100.0%;"><b>F0030</b> — Kolhapur<br>Crop age: 11 months<br>NDVI trend: -3.42%<br>Harvest ready: Yes<br>Total residue: 79.1 tons</div>`)[0];
+                popup_415d65fe0219377545ce4e3a0b00874e.setContent(html_e14b8a3faffc6230c2312c98a51b8daf);
+            
+        
+
+        circle_marker_564cb6275f276dad59b5ce4e85404dfc.bindPopup(popup_415d65fe0219377545ce4e3a0b00874e)
+        ;
+
+        
+    
+    
+            var circle_marker_2f24ea339f30f1c77ec3a40322562f0c = L.circleMarker(
+                [18.49562, 73.94514],
+                {"bubblingMouseEvents": true, "color": "#8ab17d", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#8ab17d", "fillOpacity": 0.5, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 3, "stroke": true, "weight": 1}
+            ).addTo(feature_group_5de8ec93113ea8cbf7aa1fc286d80b56);
+        
+    
+        var popup_7960b70b84e85fe5fc72301cdb4fa4d0 = L.popup({
+  "maxWidth": 220,
+});
+
+        
+            
+                var html_69974927f97e946f6b48c31f168e6fb3 = $(`<div id="html_69974927f97e946f6b48c31f168e6fb3" style="width: 100.0%; height: 100.0%;"><b>F0031</b> — Pune<br>Crop age: 16 months<br>NDVI trend: 3.47%<br>Harvest ready: No<br>Total residue: 142.4 tons</div>`)[0];
+                popup_7960b70b84e85fe5fc72301cdb4fa4d0.setContent(html_69974927f97e946f6b48c31f168e6fb3);
+            
+        
+
+        circle_marker_2f24ea339f30f1c77ec3a40322562f0c.bindPopup(popup_7960b70b84e85fe5fc72301cdb4fa4d0)
+        ;
+
+        
+    
+    
+            var circle_marker_cbca4a532eef3e18f63a3692d8935a8b = L.circleMarker(
+                [16.62163, 74.24409],
+                {"bubblingMouseEvents": true, "color": "#8ab17d", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#8ab17d", "fillOpacity": 0.5, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 3, "stroke": true, "weight": 1}
+            ).addTo(feature_group_5de8ec93113ea8cbf7aa1fc286d80b56);
+        
+    
+        var popup_4b068de34a761ef3a5a1c70a9afd1a63 = L.popup({
+  "maxWidth": 220,
+});
+
+        
+            
+                var html_c67e79e6b696953f4849b16ff4ddbd2b = $(`<div id="html_c67e79e6b696953f4849b16ff4ddbd2b" style="width: 100.0%; height: 100.0%;"><b>F0032</b> — Kolhapur<br>Crop age: 10 months<br>NDVI trend: -0.72%<br>Harvest ready: No<br>Total residue: 63.5 tons</div>`)[0];
+                popup_4b068de34a761ef3a5a1c70a9afd1a63.setContent(html_c67e79e6b696953f4849b16ff4ddbd2b);
+            
+        
+
+        circle_marker_cbca4a532eef3e18f63a3692d8935a8b.bindPopup(popup_4b068de34a761ef3a5a1c70a9afd1a63)
+        ;
+
+        
+    
+    
+            var circle_marker_45924ea2eac8b232a108bfa3213fac7e = L.circleMarker(
+                [16.59096, 74.26637],
+                {"bubblingMouseEvents": true, "color": "#d1495b", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#d1495b", "fillOpacity": 0.85, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 4, "stroke": true, "weight": 1}
+            ).addTo(feature_group_5de8ec93113ea8cbf7aa1fc286d80b56);
+        
+    
+        var popup_03561119785e00b5315929c862c01a93 = L.popup({
+  "maxWidth": 220,
+});
+
+        
+            
+                var html_9feac51cd758e6c93f0d392a8740263c = $(`<div id="html_9feac51cd758e6c93f0d392a8740263c" style="width: 100.0%; height: 100.0%;"><b>F0033</b> — Kolhapur<br>Crop age: 12 months<br>NDVI trend: -3.44%<br>Harvest ready: Yes<br>Total residue: 38.0 tons</div>`)[0];
+                popup_03561119785e00b5315929c862c01a93.setContent(html_9feac51cd758e6c93f0d392a8740263c);
+            
+        
+
+        circle_marker_45924ea2eac8b232a108bfa3213fac7e.bindPopup(popup_03561119785e00b5315929c862c01a93)
+        ;
+
+        
+    
+    
+            var circle_marker_0673a8eccb8bbb0b922d729fa8c924e1 = L.circleMarker(
+                [17.63178, 74.01606],
+                {"bubblingMouseEvents": true, "color": "#8ab17d", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#8ab17d", "fillOpacity": 0.5, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 3, "stroke": true, "weight": 1}
+            ).addTo(feature_group_5de8ec93113ea8cbf7aa1fc286d80b56);
+        
+    
+        var popup_d8948748910e4874feece33bf1ca0a98 = L.popup({
+  "maxWidth": 220,
+});
+
+        
+            
+                var html_db4475cc9fe497133c70ad3851ea2fc3 = $(`<div id="html_db4475cc9fe497133c70ad3851ea2fc3" style="width: 100.0%; height: 100.0%;"><b>F0034</b> — Satara<br>Crop age: 10 months<br>NDVI trend: -1.09%<br>Harvest ready: No<br>Total residue: 12.8 tons</div>`)[0];
+                popup_d8948748910e4874feece33bf1ca0a98.setContent(html_db4475cc9fe497133c70ad3851ea2fc3);
+            
+        
+
+        circle_marker_0673a8eccb8bbb0b922d729fa8c924e1.bindPopup(popup_d8948748910e4874feece33bf1ca0a98)
+        ;
+
+        
+    
+    
+            var circle_marker_dc267b3a282cb2c7586837b4e3870dcc = L.circleMarker(
+                [17.81337, 73.92687],
+                {"bubblingMouseEvents": true, "color": "#d1495b", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#d1495b", "fillOpacity": 0.85, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 4, "stroke": true, "weight": 1}
+            ).addTo(feature_group_5de8ec93113ea8cbf7aa1fc286d80b56);
+        
+    
+        var popup_8d3d88ec327d45a409865046bc2ed736 = L.popup({
+  "maxWidth": 220,
+});
+
+        
+            
+                var html_d53b1183c8a682fef338c395f8387171 = $(`<div id="html_d53b1183c8a682fef338c395f8387171" style="width: 100.0%; height: 100.0%;"><b>F0035</b> — Satara<br>Crop age: 14 months<br>NDVI trend: -6.68%<br>Harvest ready: Yes<br>Total residue: 66.0 tons</div>`)[0];
+                popup_8d3d88ec327d45a409865046bc2ed736.setContent(html_d53b1183c8a682fef338c395f8387171);
+            
+        
+
+        circle_marker_dc267b3a282cb2c7586837b4e3870dcc.bindPopup(popup_8d3d88ec327d45a409865046bc2ed736)
+        ;
+
+        
+    
+    
+            var circle_marker_39b86f25fd69afcda42ef4f3f7c18911 = L.circleMarker(
+                [19.04176, 74.81474],
+                {"bubblingMouseEvents": true, "color": "#8ab17d", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#8ab17d", "fillOpacity": 0.5, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 3, "stroke": true, "weight": 1}
+            ).addTo(feature_group_5de8ec93113ea8cbf7aa1fc286d80b56);
+        
+    
+        var popup_4365eafd8445912ab18ce38e4fc286ff = L.popup({
+  "maxWidth": 220,
+});
+
+        
+            
+                var html_3ef858406fc652be40ce2b1e53d9345f = $(`<div id="html_3ef858406fc652be40ce2b1e53d9345f" style="width: 100.0%; height: 100.0%;"><b>F0036</b> — Ahmednagar<br>Crop age: 12 months<br>NDVI trend: 1.84%<br>Harvest ready: No<br>Total residue: 29.5 tons</div>`)[0];
+                popup_4365eafd8445912ab18ce38e4fc286ff.setContent(html_3ef858406fc652be40ce2b1e53d9345f);
+            
+        
+
+        circle_marker_39b86f25fd69afcda42ef4f3f7c18911.bindPopup(popup_4365eafd8445912ab18ce38e4fc286ff)
+        ;
+
+        
+    
+    
+            var circle_marker_d5e8d953033220ed8281d0371b348ee4 = L.circleMarker(
+                [16.85804, 74.51573],
+                {"bubblingMouseEvents": true, "color": "#d1495b", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#d1495b", "fillOpacity": 0.85, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 4, "stroke": true, "weight": 1}
+            ).addTo(feature_group_5de8ec93113ea8cbf7aa1fc286d80b56);
+        
+    
+        var popup_d3f163d8cde270013af52b20cb68ba01 = L.popup({
+  "maxWidth": 220,
+});
+
+        
+            
+                var html_0a09da52a094dd2a7b5699e4496ef150 = $(`<div id="html_0a09da52a094dd2a7b5699e4496ef150" style="width: 100.0%; height: 100.0%;"><b>F0037</b> — Sangli<br>Crop age: 16 months<br>NDVI trend: -4.84%<br>Harvest ready: Yes<br>Total residue: 64.8 tons</div>`)[0];
+                popup_d3f163d8cde270013af52b20cb68ba01.setContent(html_0a09da52a094dd2a7b5699e4496ef150);
+            
+        
+
+        circle_marker_d5e8d953033220ed8281d0371b348ee4.bindPopup(popup_d3f163d8cde270013af52b20cb68ba01)
+        ;
+
+        
+    
+    
+            var circle_marker_f6fec88afc987fb24387e5c60f386727 = L.circleMarker(
+                [16.76591, 74.10059],
+                {"bubblingMouseEvents": true, "color": "#d1495b", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#d1495b", "fillOpacity": 0.85, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 4, "stroke": true, "weight": 1}
+            ).addTo(feature_group_5de8ec93113ea8cbf7aa1fc286d80b56);
+        
+    
+        var popup_3026877040191452153fc47fa1b84a2c = L.popup({
+  "maxWidth": 220,
+});
+
+        
+            
+                var html_3e688dc01997e8a5395e477f0eb37985 = $(`<div id="html_3e688dc01997e8a5395e477f0eb37985" style="width: 100.0%; height: 100.0%;"><b>F0038</b> — Kolhapur<br>Crop age: 14 months<br>NDVI trend: -6.14%<br>Harvest ready: Yes<br>Total residue: 137.5 tons</div>`)[0];
+                popup_3026877040191452153fc47fa1b84a2c.setContent(html_3e688dc01997e8a5395e477f0eb37985);
+            
+        
+
+        circle_marker_f6fec88afc987fb24387e5c60f386727.bindPopup(popup_3026877040191452153fc47fa1b84a2c)
+        ;
+
+        
+    
+    
+            var circle_marker_3b5a712175b61a37c44cdd91de227b72 = L.circleMarker(
+                [18.47949, 73.90034],
+                {"bubblingMouseEvents": true, "color": "#8ab17d", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#8ab17d", "fillOpacity": 0.5, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 3, "stroke": true, "weight": 1}
+            ).addTo(feature_group_5de8ec93113ea8cbf7aa1fc286d80b56);
+        
+    
+        var popup_7bd1d146deb1aa967d6391839436685e = L.popup({
+  "maxWidth": 220,
+});
+
+        
+            
+                var html_82d0be57cb918ceea942c7d9168eb3cc = $(`<div id="html_82d0be57cb918ceea942c7d9168eb3cc" style="width: 100.0%; height: 100.0%;"><b>F0039</b> — Pune<br>Crop age: 9 months<br>NDVI trend: -0.59%<br>Harvest ready: No<br>Total residue: 29.1 tons</div>`)[0];
+                popup_7bd1d146deb1aa967d6391839436685e.setContent(html_82d0be57cb918ceea942c7d9168eb3cc);
+            
+        
+
+        circle_marker_3b5a712175b61a37c44cdd91de227b72.bindPopup(popup_7bd1d146deb1aa967d6391839436685e)
+        ;
+
+        
+    
+    
+            var circle_marker_5b6cf0fb97a66a3fe5521216475569c4 = L.circleMarker(
+                [17.80143, 75.80953],
+                {"bubblingMouseEvents": true, "color": "#d1495b", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#d1495b", "fillOpacity": 0.85, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 4, "stroke": true, "weight": 1}
+            ).addTo(feature_group_5de8ec93113ea8cbf7aa1fc286d80b56);
+        
+    
+        var popup_3e217fa0314515a7cd1a5bbd7cfc9bd9 = L.popup({
+  "maxWidth": 220,
+});
+
+        
+            
+                var html_0ceb83ac71a3d292c0abaf8de4162427 = $(`<div id="html_0ceb83ac71a3d292c0abaf8de4162427" style="width: 100.0%; height: 100.0%;"><b>F0040</b> — Solapur<br>Crop age: 11 months<br>NDVI trend: -5.94%<br>Harvest ready: Yes<br>Total residue: 15.7 tons</div>`)[0];
+                popup_3e217fa0314515a7cd1a5bbd7cfc9bd9.setContent(html_0ceb83ac71a3d292c0abaf8de4162427);
+            
+        
+
+        circle_marker_5b6cf0fb97a66a3fe5521216475569c4.bindPopup(popup_3e217fa0314515a7cd1a5bbd7cfc9bd9)
+        ;
+
+        
+    
+    
+            var circle_marker_3e95de1476eeda07c4e3776d0a446bcc = L.circleMarker(
+                [16.84373, 74.37544],
+                {"bubblingMouseEvents": true, "color": "#d1495b", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#d1495b", "fillOpacity": 0.85, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 4, "stroke": true, "weight": 1}
+            ).addTo(feature_group_5de8ec93113ea8cbf7aa1fc286d80b56);
+        
+    
+        var popup_1ff6ff4bebc40ecec4fd8fdb69497cda = L.popup({
+  "maxWidth": 220,
+});
+
+        
+            
+                var html_261c4e2f4cdf3b55e07901f798cd0b2c = $(`<div id="html_261c4e2f4cdf3b55e07901f798cd0b2c" style="width: 100.0%; height: 100.0%;"><b>F0041</b> — Kolhapur<br>Crop age: 16 months<br>NDVI trend: -11.98%<br>Harvest ready: Yes<br>Total residue: 55.1 tons</div>`)[0];
+                popup_1ff6ff4bebc40ecec4fd8fdb69497cda.setContent(html_261c4e2f4cdf3b55e07901f798cd0b2c);
+            
+        
+
+        circle_marker_3e95de1476eeda07c4e3776d0a446bcc.bindPopup(popup_1ff6ff4bebc40ecec4fd8fdb69497cda)
+        ;
+
+        
+    
+    
+            var circle_marker_6f0a689e53206cc3834e1f1bac3dd236 = L.circleMarker(
+                [17.58543, 76.04258],
+                {"bubblingMouseEvents": true, "color": "#8ab17d", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#8ab17d", "fillOpacity": 0.5, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 3, "stroke": true, "weight": 1}
+            ).addTo(feature_group_5de8ec93113ea8cbf7aa1fc286d80b56);
+        
+    
+        var popup_41832cadd8d7fa505da93d121577e7fe = L.popup({
+  "maxWidth": 220,
+});
+
+        
+            
+                var html_a09c3a63ceca2f7e2387b036b41cccdd = $(`<div id="html_a09c3a63ceca2f7e2387b036b41cccdd" style="width: 100.0%; height: 100.0%;"><b>F0042</b> — Solapur<br>Crop age: 9 months<br>NDVI trend: 6.95%<br>Harvest ready: No<br>Total residue: 71.4 tons</div>`)[0];
+                popup_41832cadd8d7fa505da93d121577e7fe.setContent(html_a09c3a63ceca2f7e2387b036b41cccdd);
+            
+        
+
+        circle_marker_6f0a689e53206cc3834e1f1bac3dd236.bindPopup(popup_41832cadd8d7fa505da93d121577e7fe)
+        ;
+
+        
+    
+    
+            var circle_marker_1f3b8e11c003f0f7a1f760d5a3f66674 = L.circleMarker(
+                [16.70417, 74.36776],
+                {"bubblingMouseEvents": true, "color": "#8ab17d", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#8ab17d", "fillOpacity": 0.5, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 3, "stroke": true, "weight": 1}
+            ).addTo(feature_group_5de8ec93113ea8cbf7aa1fc286d80b56);
+        
+    
+        var popup_bc6b91254ade826746bb98d99c44d052 = L.popup({
+  "maxWidth": 220,
+});
+
+        
+            
+                var html_2698527b7db15d1cdfc650c191e46309 = $(`<div id="html_2698527b7db15d1cdfc650c191e46309" style="width: 100.0%; height: 100.0%;"><b>F0043</b> — Kolhapur<br>Crop age: 17 months<br>NDVI trend: 3.71%<br>Harvest ready: No<br>Total residue: 49.9 tons</div>`)[0];
+                popup_bc6b91254ade826746bb98d99c44d052.setContent(html_2698527b7db15d1cdfc650c191e46309);
+            
+        
+
+        circle_marker_1f3b8e11c003f0f7a1f760d5a3f66674.bindPopup(popup_bc6b91254ade826746bb98d99c44d052)
+        ;
+
+        
+    
+    
+            var circle_marker_b60f48e54e686063a2f0557067fcd0bf = L.circleMarker(
+                [17.62076, 73.97935],
+                {"bubblingMouseEvents": true, "color": "#d1495b", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#d1495b", "fillOpacity": 0.85, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 4, "stroke": true, "weight": 1}
+            ).addTo(feature_group_5de8ec93113ea8cbf7aa1fc286d80b56);
+        
+    
+        var popup_d88239c8e10c96856c249e6c4e5b3242 = L.popup({
+  "maxWidth": 220,
+});
+
+        
+            
+                var html_970c8eb13f9dae1e61e43705c5788f27 = $(`<div id="html_970c8eb13f9dae1e61e43705c5788f27" style="width: 100.0%; height: 100.0%;"><b>F0044</b> — Satara<br>Crop age: 16 months<br>NDVI trend: -6.48%<br>Harvest ready: Yes<br>Total residue: 112.6 tons</div>`)[0];
+                popup_d88239c8e10c96856c249e6c4e5b3242.setContent(html_970c8eb13f9dae1e61e43705c5788f27);
+            
+        
+
+        circle_marker_b60f48e54e686063a2f0557067fcd0bf.bindPopup(popup_d88239c8e10c96856c249e6c4e5b3242)
+        ;
+
+        
+    
+    
+            var circle_marker_82bc9285a5d913a8ec3211c234c9e217 = L.circleMarker(
+                [16.78785, 74.43614],
+                {"bubblingMouseEvents": true, "color": "#d1495b", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#d1495b", "fillOpacity": 0.85, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 4, "stroke": true, "weight": 1}
+            ).addTo(feature_group_5de8ec93113ea8cbf7aa1fc286d80b56);
+        
+    
+        var popup_b029b9738404ea387d4ed136e8378a13 = L.popup({
+  "maxWidth": 220,
+});
+
+        
+            
+                var html_ea0c1f6b256476b1c01dffc6cc3d133a = $(`<div id="html_ea0c1f6b256476b1c01dffc6cc3d133a" style="width: 100.0%; height: 100.0%;"><b>F0045</b> — Sangli<br>Crop age: 17 months<br>NDVI trend: -3.42%<br>Harvest ready: Yes<br>Total residue: 7.0 tons</div>`)[0];
+                popup_b029b9738404ea387d4ed136e8378a13.setContent(html_ea0c1f6b256476b1c01dffc6cc3d133a);
+            
+        
+
+        circle_marker_82bc9285a5d913a8ec3211c234c9e217.bindPopup(popup_b029b9738404ea387d4ed136e8378a13)
+        ;
+
+        
+    
+    
+            var circle_marker_4818d7882a77579e0991ef3ee87f0111 = L.circleMarker(
+                [18.38147, 73.9852],
+                {"bubblingMouseEvents": true, "color": "#8ab17d", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#8ab17d", "fillOpacity": 0.5, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 3, "stroke": true, "weight": 1}
+            ).addTo(feature_group_5de8ec93113ea8cbf7aa1fc286d80b56);
+        
+    
+        var popup_196753429eb6570de53afc5f5368eba5 = L.popup({
+  "maxWidth": 220,
+});
+
+        
+            
+                var html_8407a87b96c6ad7ef7de9edf927c4961 = $(`<div id="html_8407a87b96c6ad7ef7de9edf927c4961" style="width: 100.0%; height: 100.0%;"><b>F0046</b> — Pune<br>Crop age: 12 months<br>NDVI trend: -1.54%<br>Harvest ready: No<br>Total residue: 40.4 tons</div>`)[0];
+                popup_196753429eb6570de53afc5f5368eba5.setContent(html_8407a87b96c6ad7ef7de9edf927c4961);
+            
+        
+
+        circle_marker_4818d7882a77579e0991ef3ee87f0111.bindPopup(popup_196753429eb6570de53afc5f5368eba5)
+        ;
+
+        
+    
+    
+            var circle_marker_d2b7c177eaee772eb66b9012bda89dbb = L.circleMarker(
+                [16.88527, 74.55996],
+                {"bubblingMouseEvents": true, "color": "#8ab17d", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#8ab17d", "fillOpacity": 0.5, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 3, "stroke": true, "weight": 1}
+            ).addTo(feature_group_5de8ec93113ea8cbf7aa1fc286d80b56);
+        
+    
+        var popup_007b6abc8f8f436a095cc640083a2557 = L.popup({
+  "maxWidth": 220,
+});
+
+        
+            
+                var html_23dc5df6ddadb98ac81d225aafd1d242 = $(`<div id="html_23dc5df6ddadb98ac81d225aafd1d242" style="width: 100.0%; height: 100.0%;"><b>F0047</b> — Sangli<br>Crop age: 9 months<br>NDVI trend: 11.08%<br>Harvest ready: No<br>Total residue: 29.9 tons</div>`)[0];
+                popup_007b6abc8f8f436a095cc640083a2557.setContent(html_23dc5df6ddadb98ac81d225aafd1d242);
+            
+        
+
+        circle_marker_d2b7c177eaee772eb66b9012bda89dbb.bindPopup(popup_007b6abc8f8f436a095cc640083a2557)
+        ;
+
+        
+    
+    
+            var circle_marker_bb62ff9c4d6dad6a5bebf60a50e737b1 = L.circleMarker(
+                [17.6607, 76.0464],
+                {"bubblingMouseEvents": true, "color": "#8ab17d", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#8ab17d", "fillOpacity": 0.5, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 3, "stroke": true, "weight": 1}
+            ).addTo(feature_group_5de8ec93113ea8cbf7aa1fc286d80b56);
+        
+    
+        var popup_d2cd68daf6c7ac12a23a904473d16251 = L.popup({
+  "maxWidth": 220,
+});
+
+        
+            
+                var html_471ee54ee1658504ac6305aa1e4381cd = $(`<div id="html_471ee54ee1658504ac6305aa1e4381cd" style="width: 100.0%; height: 100.0%;"><b>F0048</b> — Solapur<br>Crop age: 11 months<br>NDVI trend: 0.0%<br>Harvest ready: No<br>Total residue: 20.7 tons</div>`)[0];
+                popup_d2cd68daf6c7ac12a23a904473d16251.setContent(html_471ee54ee1658504ac6305aa1e4381cd);
+            
+        
+
+        circle_marker_bb62ff9c4d6dad6a5bebf60a50e737b1.bindPopup(popup_d2cd68daf6c7ac12a23a904473d16251)
+        ;
+
+        
+    
+    
+            var circle_marker_6f7f3ef78207b8a5e3339d2b161848a0 = L.circleMarker(
+                [17.52534, 76.04549],
+                {"bubblingMouseEvents": true, "color": "#d1495b", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#d1495b", "fillOpacity": 0.85, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 4, "stroke": true, "weight": 1}
+            ).addTo(feature_group_5de8ec93113ea8cbf7aa1fc286d80b56);
+        
+    
+        var popup_8d1180d38f0ea52d8b0a3645de4a52ce = L.popup({
+  "maxWidth": 220,
+});
+
+        
+            
+                var html_07bd961eb68ff0ddba6df8e4075467f9 = $(`<div id="html_07bd961eb68ff0ddba6df8e4075467f9" style="width: 100.0%; height: 100.0%;"><b>F0049</b> — Solapur<br>Crop age: 14 months<br>NDVI trend: -4.78%<br>Harvest ready: Yes<br>Total residue: 80.8 tons</div>`)[0];
+                popup_8d1180d38f0ea52d8b0a3645de4a52ce.setContent(html_07bd961eb68ff0ddba6df8e4075467f9);
+            
+        
+
+        circle_marker_6f7f3ef78207b8a5e3339d2b161848a0.bindPopup(popup_8d1180d38f0ea52d8b0a3645de4a52ce)
+        ;
+
+        
+    
+    
+            var circle_marker_062c687990a562fa8f2d57bd7fff6d4e = L.circleMarker(
+                [16.63859, 74.3492],
+                {"bubblingMouseEvents": true, "color": "#d1495b", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#d1495b", "fillOpacity": 0.85, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 4, "stroke": true, "weight": 1}
+            ).addTo(feature_group_5de8ec93113ea8cbf7aa1fc286d80b56);
+        
+    
+        var popup_9b7fc88d6532690de5d1a036471784e3 = L.popup({
+  "maxWidth": 220,
+});
+
+        
+            
+                var html_4db61f37e99260c8275e77674de4dd1e = $(`<div id="html_4db61f37e99260c8275e77674de4dd1e" style="width: 100.0%; height: 100.0%;"><b>F0050</b> — Kolhapur<br>Crop age: 15 months<br>NDVI trend: -8.7%<br>Harvest ready: Yes<br>Total residue: 75.2 tons</div>`)[0];
+                popup_9b7fc88d6532690de5d1a036471784e3.setContent(html_4db61f37e99260c8275e77674de4dd1e);
+            
+        
+
+        circle_marker_062c687990a562fa8f2d57bd7fff6d4e.bindPopup(popup_9b7fc88d6532690de5d1a036471784e3)
+        ;
+
+        
+    
+    
+            var circle_marker_5ec054d6255202c95d60958a7c5c464a = L.circleMarker(
+                [17.80298, 73.95663],
+                {"bubblingMouseEvents": true, "color": "#8ab17d", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#8ab17d", "fillOpacity": 0.5, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 3, "stroke": true, "weight": 1}
+            ).addTo(feature_group_5de8ec93113ea8cbf7aa1fc286d80b56);
+        
+    
+        var popup_3b073b89617da97dcb38a321b5acb2f6 = L.popup({
+  "maxWidth": 220,
+});
+
+        
+            
+                var html_726f84a5b00ac45b4c5a3aeb9037df9b = $(`<div id="html_726f84a5b00ac45b4c5a3aeb9037df9b" style="width: 100.0%; height: 100.0%;"><b>F0051</b> — Satara<br>Crop age: 10 months<br>NDVI trend: -10.66%<br>Harvest ready: No<br>Total residue: 73.9 tons</div>`)[0];
+                popup_3b073b89617da97dcb38a321b5acb2f6.setContent(html_726f84a5b00ac45b4c5a3aeb9037df9b);
+            
+        
+
+        circle_marker_5ec054d6255202c95d60958a7c5c464a.bindPopup(popup_3b073b89617da97dcb38a321b5acb2f6)
+        ;
+
+        
+    
+    
+            var circle_marker_f7a892a83f1cef8267691787eeac4b27 = L.circleMarker(
+                [19.01667, 74.71353],
+                {"bubblingMouseEvents": true, "color": "#8ab17d", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#8ab17d", "fillOpacity": 0.5, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 3, "stroke": true, "weight": 1}
+            ).addTo(feature_group_5de8ec93113ea8cbf7aa1fc286d80b56);
+        
+    
+        var popup_805a0c4ff60737961c2a3f676f0a79fc = L.popup({
+  "maxWidth": 220,
+});
+
+        
+            
+                var html_152c8371d81f2a52791198f326cb8077 = $(`<div id="html_152c8371d81f2a52791198f326cb8077" style="width: 100.0%; height: 100.0%;"><b>F0052</b> — Ahmednagar<br>Crop age: 8 months<br>NDVI trend: 7.71%<br>Harvest ready: No<br>Total residue: 25.5 tons</div>`)[0];
+                popup_805a0c4ff60737961c2a3f676f0a79fc.setContent(html_152c8371d81f2a52791198f326cb8077);
+            
+        
+
+        circle_marker_f7a892a83f1cef8267691787eeac4b27.bindPopup(popup_805a0c4ff60737961c2a3f676f0a79fc)
+        ;
+
+        
+    
+    
+            var circle_marker_2e52ee18f1ba05eef649c5b467009898 = L.circleMarker(
+                [17.57397, 74.12364],
+                {"bubblingMouseEvents": true, "color": "#d1495b", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#d1495b", "fillOpacity": 0.85, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 4, "stroke": true, "weight": 1}
+            ).addTo(feature_group_5de8ec93113ea8cbf7aa1fc286d80b56);
+        
+    
+        var popup_71ada2b8a7ba50c7db9baaa7e5227371 = L.popup({
+  "maxWidth": 220,
+});
+
+        
+            
+                var html_ad4ad5eeb0d0a7ad9805b108fcc2682e = $(`<div id="html_ad4ad5eeb0d0a7ad9805b108fcc2682e" style="width: 100.0%; height: 100.0%;"><b>F0053</b> — Satara<br>Crop age: 11 months<br>NDVI trend: -10.2%<br>Harvest ready: Yes<br>Total residue: 30.2 tons</div>`)[0];
+                popup_71ada2b8a7ba50c7db9baaa7e5227371.setContent(html_ad4ad5eeb0d0a7ad9805b108fcc2682e);
+            
+        
+
+        circle_marker_2e52ee18f1ba05eef649c5b467009898.bindPopup(popup_71ada2b8a7ba50c7db9baaa7e5227371)
+        ;
+
+        
+    
+    
+            var circle_marker_33ea40057d6ed37100e490403fc01cb0 = L.circleMarker(
+                [19.09164, 74.69308],
+                {"bubblingMouseEvents": true, "color": "#8ab17d", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#8ab17d", "fillOpacity": 0.5, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 3, "stroke": true, "weight": 1}
+            ).addTo(feature_group_5de8ec93113ea8cbf7aa1fc286d80b56);
+        
+    
+        var popup_a038ff3663377c93bfe422595f03bbe4 = L.popup({
+  "maxWidth": 220,
+});
+
+        
+            
+                var html_ba90459c007f419aab9734b7bd9d5bbc = $(`<div id="html_ba90459c007f419aab9734b7bd9d5bbc" style="width: 100.0%; height: 100.0%;"><b>F0054</b> — Ahmednagar<br>Crop age: 9 months<br>NDVI trend: 5.25%<br>Harvest ready: No<br>Total residue: 19.8 tons</div>`)[0];
+                popup_a038ff3663377c93bfe422595f03bbe4.setContent(html_ba90459c007f419aab9734b7bd9d5bbc);
+            
+        
+
+        circle_marker_33ea40057d6ed37100e490403fc01cb0.bindPopup(popup_a038ff3663377c93bfe422595f03bbe4)
+        ;
+
+        
+    
+    
+            var circle_marker_f5eff5406f4e9e4543582d72ad2da8df = L.circleMarker(
+                [17.8056, 75.80725],
+                {"bubblingMouseEvents": true, "color": "#d1495b", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#d1495b", "fillOpacity": 0.85, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 4, "stroke": true, "weight": 1}
+            ).addTo(feature_group_5de8ec93113ea8cbf7aa1fc286d80b56);
+        
+    
+        var popup_2efb465e7986cf94599f42b2fc6ada16 = L.popup({
+  "maxWidth": 220,
+});
+
+        
+            
+                var html_0550312213a605e7321b9c551b806da3 = $(`<div id="html_0550312213a605e7321b9c551b806da3" style="width: 100.0%; height: 100.0%;"><b>F0055</b> — Solapur<br>Crop age: 15 months<br>NDVI trend: -5.74%<br>Harvest ready: Yes<br>Total residue: 36.5 tons</div>`)[0];
+                popup_2efb465e7986cf94599f42b2fc6ada16.setContent(html_0550312213a605e7321b9c551b806da3);
+            
+        
+
+        circle_marker_f5eff5406f4e9e4543582d72ad2da8df.bindPopup(popup_2efb465e7986cf94599f42b2fc6ada16)
+        ;
+
+        
+    
+    
+            var circle_marker_5c7d15ddf472d26fabf2da445219f118 = L.circleMarker(
+                [17.60312, 74.03534],
+                {"bubblingMouseEvents": true, "color": "#d1495b", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#d1495b", "fillOpacity": 0.85, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 4, "stroke": true, "weight": 1}
+            ).addTo(feature_group_5de8ec93113ea8cbf7aa1fc286d80b56);
+        
+    
+        var popup_d2a6126298e53cafc1eb6d4e1e5facb5 = L.popup({
+  "maxWidth": 220,
+});
+
+        
+            
+                var html_df76e058453801a2c68f12418ad07a49 = $(`<div id="html_df76e058453801a2c68f12418ad07a49" style="width: 100.0%; height: 100.0%;"><b>F0056</b> — Satara<br>Crop age: 11 months<br>NDVI trend: -7.69%<br>Harvest ready: Yes<br>Total residue: 64.5 tons</div>`)[0];
+                popup_d2a6126298e53cafc1eb6d4e1e5facb5.setContent(html_df76e058453801a2c68f12418ad07a49);
+            
+        
+
+        circle_marker_5c7d15ddf472d26fabf2da445219f118.bindPopup(popup_d2a6126298e53cafc1eb6d4e1e5facb5)
+        ;
+
+        
+    
+    
+            var circle_marker_5b9aa32d67721eeef8a6d31773f3524f = L.circleMarker(
+                [16.75664, 74.37415],
+                {"bubblingMouseEvents": true, "color": "#8ab17d", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#8ab17d", "fillOpacity": 0.5, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 3, "stroke": true, "weight": 1}
+            ).addTo(feature_group_5de8ec93113ea8cbf7aa1fc286d80b56);
+        
+    
+        var popup_0dd5642fe3911cf3132120780e0807c6 = L.popup({
+  "maxWidth": 220,
+});
+
+        
+            
+                var html_4060f6d5d896fe0bbf7e4700920e0557 = $(`<div id="html_4060f6d5d896fe0bbf7e4700920e0557" style="width: 100.0%; height: 100.0%;"><b>F0057</b> — Kolhapur<br>Crop age: 9 months<br>NDVI trend: 7.02%<br>Harvest ready: No<br>Total residue: 40.8 tons</div>`)[0];
+                popup_0dd5642fe3911cf3132120780e0807c6.setContent(html_4060f6d5d896fe0bbf7e4700920e0557);
+            
+        
+
+        circle_marker_5b9aa32d67721eeef8a6d31773f3524f.bindPopup(popup_0dd5642fe3911cf3132120780e0807c6)
+        ;
+
+        
+    
+    
+            var circle_marker_c13d1352ff76065cbb6c18a26883e133 = L.circleMarker(
+                [16.78349, 74.30211],
+                {"bubblingMouseEvents": true, "color": "#8ab17d", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#8ab17d", "fillOpacity": 0.5, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 3, "stroke": true, "weight": 1}
+            ).addTo(feature_group_5de8ec93113ea8cbf7aa1fc286d80b56);
+        
+    
+        var popup_128b02e56b06fec256721497c59e022f = L.popup({
+  "maxWidth": 220,
+});
+
+        
+            
+                var html_2e494e519da7cb9fd42b317b0a8d817a = $(`<div id="html_2e494e519da7cb9fd42b317b0a8d817a" style="width: 100.0%; height: 100.0%;"><b>F0058</b> — Kolhapur<br>Crop age: 13 months<br>NDVI trend: 0.0%<br>Harvest ready: No<br>Total residue: 14.2 tons</div>`)[0];
+                popup_128b02e56b06fec256721497c59e022f.setContent(html_2e494e519da7cb9fd42b317b0a8d817a);
+            
+        
+
+        circle_marker_c13d1352ff76065cbb6c18a26883e133.bindPopup(popup_128b02e56b06fec256721497c59e022f)
+        ;
+
+        
+    
+    
+            var circle_marker_45a3deba8ae626f9f1623de4169f8f19 = L.circleMarker(
+                [16.62629, 74.26432],
+                {"bubblingMouseEvents": true, "color": "#d1495b", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#d1495b", "fillOpacity": 0.85, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 4, "stroke": true, "weight": 1}
+            ).addTo(feature_group_5de8ec93113ea8cbf7aa1fc286d80b56);
+        
+    
+        var popup_f0caadedb09b692a64e7cd82f7d68a2d = L.popup({
+  "maxWidth": 220,
+});
+
+        
+            
+                var html_eddb85244cdbc27bb5c0b56a310e8227 = $(`<div id="html_eddb85244cdbc27bb5c0b56a310e8227" style="width: 100.0%; height: 100.0%;"><b>F0059</b> — Kolhapur<br>Crop age: 13 months<br>NDVI trend: -3.44%<br>Harvest ready: Yes<br>Total residue: 35.1 tons</div>`)[0];
+                popup_f0caadedb09b692a64e7cd82f7d68a2d.setContent(html_eddb85244cdbc27bb5c0b56a310e8227);
+            
+        
+
+        circle_marker_45a3deba8ae626f9f1623de4169f8f19.bindPopup(popup_f0caadedb09b692a64e7cd82f7d68a2d)
+        ;
+
+        
+    
+    
+            var circle_marker_6906c1713a6b9851fe385fee19bb921b = L.circleMarker(
+                [16.92086, 74.46065],
+                {"bubblingMouseEvents": true, "color": "#8ab17d", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#8ab17d", "fillOpacity": 0.5, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 3, "stroke": true, "weight": 1}
+            ).addTo(feature_group_5de8ec93113ea8cbf7aa1fc286d80b56);
+        
+    
+        var popup_4f39904fe248925521a509c15276476e = L.popup({
+  "maxWidth": 220,
+});
+
+        
+            
+                var html_3fa93f12d83a4d6da6bae3376bd9f76d = $(`<div id="html_3fa93f12d83a4d6da6bae3376bd9f76d" style="width: 100.0%; height: 100.0%;"><b>F0060</b> — Sangli<br>Crop age: 17 months<br>NDVI trend: 1.59%<br>Harvest ready: No<br>Total residue: 47.1 tons</div>`)[0];
+                popup_4f39904fe248925521a509c15276476e.setContent(html_3fa93f12d83a4d6da6bae3376bd9f76d);
+            
+        
+
+        circle_marker_6906c1713a6b9851fe385fee19bb921b.bindPopup(popup_4f39904fe248925521a509c15276476e)
+        ;
+
+        
+    
+    
+            var circle_marker_d06753467e8c38db9debab4c82950715 = L.circleMarker(
+                [16.81273, 74.616],
+                {"bubblingMouseEvents": true, "color": "#8ab17d", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#8ab17d", "fillOpacity": 0.5, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 3, "stroke": true, "weight": 1}
+            ).addTo(feature_group_5de8ec93113ea8cbf7aa1fc286d80b56);
+        
+    
+        var popup_8d9d85150720637ccb091e543085204a = L.popup({
+  "maxWidth": 220,
+});
+
+        
+            
+                var html_d77852ae66c315e00a60d908c99e6fca = $(`<div id="html_d77852ae66c315e00a60d908c99e6fca" style="width: 100.0%; height: 100.0%;"><b>F0061</b> — Sangli<br>Crop age: 11 months<br>NDVI trend: -1.98%<br>Harvest ready: No<br>Total residue: 76.2 tons</div>`)[0];
+                popup_8d9d85150720637ccb091e543085204a.setContent(html_d77852ae66c315e00a60d908c99e6fca);
+            
+        
+
+        circle_marker_d06753467e8c38db9debab4c82950715.bindPopup(popup_8d9d85150720637ccb091e543085204a)
+        ;
+
+        
+    
+    
+            var circle_marker_edb68b55210fc7f98d6ceed94e24c357 = L.circleMarker(
+                [16.89209, 74.72852],
+                {"bubblingMouseEvents": true, "color": "#d1495b", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#d1495b", "fillOpacity": 0.85, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 4, "stroke": true, "weight": 1}
+            ).addTo(feature_group_5de8ec93113ea8cbf7aa1fc286d80b56);
+        
+    
+        var popup_bd6992b1af7593e60c3ea15610cd38f3 = L.popup({
+  "maxWidth": 220,
+});
+
+        
+            
+                var html_80f64f8cb3175905ce35eed3d92457cc = $(`<div id="html_80f64f8cb3175905ce35eed3d92457cc" style="width: 100.0%; height: 100.0%;"><b>F0062</b> — Sangli<br>Crop age: 13 months<br>NDVI trend: -8.24%<br>Harvest ready: Yes<br>Total residue: 91.2 tons</div>`)[0];
+                popup_bd6992b1af7593e60c3ea15610cd38f3.setContent(html_80f64f8cb3175905ce35eed3d92457cc);
+            
+        
+
+        circle_marker_edb68b55210fc7f98d6ceed94e24c357.bindPopup(popup_bd6992b1af7593e60c3ea15610cd38f3)
+        ;
+
+        
+    
+    
+            var circle_marker_a4bd51990ae98dc1406629a546702144 = L.circleMarker(
+                [19.13486, 74.64003],
+                {"bubblingMouseEvents": true, "color": "#8ab17d", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#8ab17d", "fillOpacity": 0.5, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 3, "stroke": true, "weight": 1}
+            ).addTo(feature_group_5de8ec93113ea8cbf7aa1fc286d80b56);
+        
+    
+        var popup_2f2569b5043f1484a9b54717d5993b83 = L.popup({
+  "maxWidth": 220,
+});
+
+        
+            
+                var html_950a8a468f4b7db7271eaf58d244c6b9 = $(`<div id="html_950a8a468f4b7db7271eaf58d244c6b9" style="width: 100.0%; height: 100.0%;"><b>F0063</b> — Ahmednagar<br>Crop age: 9 months<br>NDVI trend: 6.41%<br>Harvest ready: No<br>Total residue: 17.3 tons</div>`)[0];
+                popup_2f2569b5043f1484a9b54717d5993b83.setContent(html_950a8a468f4b7db7271eaf58d244c6b9);
+            
+        
+
+        circle_marker_a4bd51990ae98dc1406629a546702144.bindPopup(popup_2f2569b5043f1484a9b54717d5993b83)
+        ;
+
+        
+    
+    
+            var circle_marker_a052bcd1bca68691c7708cb4f9baa289 = L.circleMarker(
+                [16.86313, 74.587],
+                {"bubblingMouseEvents": true, "color": "#8ab17d", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#8ab17d", "fillOpacity": 0.5, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 3, "stroke": true, "weight": 1}
+            ).addTo(feature_group_5de8ec93113ea8cbf7aa1fc286d80b56);
+        
+    
+        var popup_406aff534645c265e2d1553f28374a52 = L.popup({
+  "maxWidth": 220,
+});
+
+        
+            
+                var html_e03b2387815dbec31b8f0a4e5e848a09 = $(`<div id="html_e03b2387815dbec31b8f0a4e5e848a09" style="width: 100.0%; height: 100.0%;"><b>F0064</b> — Sangli<br>Crop age: 17 months<br>NDVI trend: -0.8%<br>Harvest ready: No<br>Total residue: 176.4 tons</div>`)[0];
+                popup_406aff534645c265e2d1553f28374a52.setContent(html_e03b2387815dbec31b8f0a4e5e848a09);
+            
+        
+
+        circle_marker_a052bcd1bca68691c7708cb4f9baa289.bindPopup(popup_406aff534645c265e2d1553f28374a52)
+        ;
+
+        
+    
+    
+            var circle_marker_98309b14b2d5087148ca2ac851728063 = L.circleMarker(
+                [16.72949, 74.69471],
+                {"bubblingMouseEvents": true, "color": "#8ab17d", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#8ab17d", "fillOpacity": 0.5, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 3, "stroke": true, "weight": 1}
+            ).addTo(feature_group_5de8ec93113ea8cbf7aa1fc286d80b56);
+        
+    
+        var popup_80d821b93b83510ae4cd6a9e00a8b770 = L.popup({
+  "maxWidth": 220,
+});
+
+        
+            
+                var html_4235f4fc9da16a1c491a1707ee0de32d = $(`<div id="html_4235f4fc9da16a1c491a1707ee0de32d" style="width: 100.0%; height: 100.0%;"><b>F0065</b> — Sangli<br>Crop age: 9 months<br>NDVI trend: -1.07%<br>Harvest ready: No<br>Total residue: 25.8 tons</div>`)[0];
+                popup_80d821b93b83510ae4cd6a9e00a8b770.setContent(html_4235f4fc9da16a1c491a1707ee0de32d);
+            
+        
+
+        circle_marker_98309b14b2d5087148ca2ac851728063.bindPopup(popup_80d821b93b83510ae4cd6a9e00a8b770)
+        ;
+
+        
+    
+    
+            var circle_marker_29fe9364061882fdb2de41970de8df88 = L.circleMarker(
+                [17.76049, 75.97863],
+                {"bubblingMouseEvents": true, "color": "#d1495b", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#d1495b", "fillOpacity": 0.85, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 4, "stroke": true, "weight": 1}
+            ).addTo(feature_group_5de8ec93113ea8cbf7aa1fc286d80b56);
+        
+    
+        var popup_b3699c8525334d64b944d4ff2cd32ac5 = L.popup({
+  "maxWidth": 220,
+});
+
+        
+            
+                var html_d636f7ccc7a27049a3489cf3a8f60f2c = $(`<div id="html_d636f7ccc7a27049a3489cf3a8f60f2c" style="width: 100.0%; height: 100.0%;"><b>F0066</b> — Solapur<br>Crop age: 17 months<br>NDVI trend: -6.19%<br>Harvest ready: Yes<br>Total residue: 169.7 tons</div>`)[0];
+                popup_b3699c8525334d64b944d4ff2cd32ac5.setContent(html_d636f7ccc7a27049a3489cf3a8f60f2c);
+            
+        
+
+        circle_marker_29fe9364061882fdb2de41970de8df88.bindPopup(popup_b3699c8525334d64b944d4ff2cd32ac5)
+        ;
+
+        
+    
+    
+            var circle_marker_fa9ae43316a9381560caef5221dfca78 = L.circleMarker(
+                [16.65123, 74.3024],
+                {"bubblingMouseEvents": true, "color": "#d1495b", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#d1495b", "fillOpacity": 0.85, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 4, "stroke": true, "weight": 1}
+            ).addTo(feature_group_5de8ec93113ea8cbf7aa1fc286d80b56);
+        
+    
+        var popup_0409abf4bc8d2970c92dbbbf1df06a12 = L.popup({
+  "maxWidth": 220,
+});
+
+        
+            
+                var html_73dcc750bcb90525d33573c40811611e = $(`<div id="html_73dcc750bcb90525d33573c40811611e" style="width: 100.0%; height: 100.0%;"><b>F0067</b> — Kolhapur<br>Crop age: 11 months<br>NDVI trend: -7.66%<br>Harvest ready: Yes<br>Total residue: 45.7 tons</div>`)[0];
+                popup_0409abf4bc8d2970c92dbbbf1df06a12.setContent(html_73dcc750bcb90525d33573c40811611e);
+            
+        
+
+        circle_marker_fa9ae43316a9381560caef5221dfca78.bindPopup(popup_0409abf4bc8d2970c92dbbbf1df06a12)
+        ;
+
+        
+    
+    
+            var circle_marker_3e23f4c97c8fecdf995f6e541d0023d9 = L.circleMarker(
+                [19.00076, 74.80875],
+                {"bubblingMouseEvents": true, "color": "#d1495b", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#d1495b", "fillOpacity": 0.85, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 4, "stroke": true, "weight": 1}
+            ).addTo(feature_group_5de8ec93113ea8cbf7aa1fc286d80b56);
+        
+    
+        var popup_766c0f3ad51faa65f2a5798b6381ca06 = L.popup({
+  "maxWidth": 220,
+});
+
+        
+            
+                var html_3fc63ac4d1e117ce594c242d2f913ca6 = $(`<div id="html_3fc63ac4d1e117ce594c242d2f913ca6" style="width: 100.0%; height: 100.0%;"><b>F0068</b> — Ahmednagar<br>Crop age: 15 months<br>NDVI trend: -9.96%<br>Harvest ready: Yes<br>Total residue: 10.6 tons</div>`)[0];
+                popup_766c0f3ad51faa65f2a5798b6381ca06.setContent(html_3fc63ac4d1e117ce594c242d2f913ca6);
+            
+        
+
+        circle_marker_3e23f4c97c8fecdf995f6e541d0023d9.bindPopup(popup_766c0f3ad51faa65f2a5798b6381ca06)
+        ;
+
+        
+    
+    
+            var circle_marker_51a5635b9fc8709b8ea59b168eafd5c3 = L.circleMarker(
+                [16.56723, 74.20115],
+                {"bubblingMouseEvents": true, "color": "#8ab17d", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#8ab17d", "fillOpacity": 0.5, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 3, "stroke": true, "weight": 1}
+            ).addTo(feature_group_5de8ec93113ea8cbf7aa1fc286d80b56);
+        
+    
+        var popup_7bf4ec3b76f05d0bc9cad1ee3b89c1fc = L.popup({
+  "maxWidth": 220,
+});
+
+        
+            
+                var html_1f805db27c0a1bb8ab9aaa368d4ec495 = $(`<div id="html_1f805db27c0a1bb8ab9aaa368d4ec495" style="width: 100.0%; height: 100.0%;"><b>F0069</b> — Kolhapur<br>Crop age: 14 months<br>NDVI trend: 0.84%<br>Harvest ready: No<br>Total residue: 49.2 tons</div>`)[0];
+                popup_7bf4ec3b76f05d0bc9cad1ee3b89c1fc.setContent(html_1f805db27c0a1bb8ab9aaa368d4ec495);
+            
+        
+
+        circle_marker_51a5635b9fc8709b8ea59b168eafd5c3.bindPopup(popup_7bf4ec3b76f05d0bc9cad1ee3b89c1fc)
+        ;
+
+        
+    
+    
+            var circle_marker_a260fd07495b687df6eb7a91e52e8d50 = L.circleMarker(
+                [17.70777, 73.95638],
+                {"bubblingMouseEvents": true, "color": "#8ab17d", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#8ab17d", "fillOpacity": 0.5, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 3, "stroke": true, "weight": 1}
+            ).addTo(feature_group_5de8ec93113ea8cbf7aa1fc286d80b56);
+        
+    
+        var popup_fffd0f60bc2d7bafd546b77fb9e9beb0 = L.popup({
+  "maxWidth": 220,
+});
+
+        
+            
+                var html_ccbef1184b59596fa1f8ee2995279faa = $(`<div id="html_ccbef1184b59596fa1f8ee2995279faa" style="width: 100.0%; height: 100.0%;"><b>F0070</b> — Satara<br>Crop age: 16 months<br>NDVI trend: 2.88%<br>Harvest ready: No<br>Total residue: 108.8 tons</div>`)[0];
+                popup_fffd0f60bc2d7bafd546b77fb9e9beb0.setContent(html_ccbef1184b59596fa1f8ee2995279faa);
+            
+        
+
+        circle_marker_a260fd07495b687df6eb7a91e52e8d50.bindPopup(popup_fffd0f60bc2d7bafd546b77fb9e9beb0)
+        ;
+
+        
+    
+    
+            var circle_marker_90e47f8611bba35661eab0b831afb42c = L.circleMarker(
+                [19.14807, 74.84081],
+                {"bubblingMouseEvents": true, "color": "#d1495b", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#d1495b", "fillOpacity": 0.85, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 4, "stroke": true, "weight": 1}
+            ).addTo(feature_group_5de8ec93113ea8cbf7aa1fc286d80b56);
+        
+    
+        var popup_75947d4e7002aeeb718119ff000684cb = L.popup({
+  "maxWidth": 220,
+});
+
+        
+            
+                var html_f7bce006f396432cab269dfca94c037c = $(`<div id="html_f7bce006f396432cab269dfca94c037c" style="width: 100.0%; height: 100.0%;"><b>F0071</b> — Ahmednagar<br>Crop age: 15 months<br>NDVI trend: -10.21%<br>Harvest ready: Yes<br>Total residue: 101.0 tons</div>`)[0];
+                popup_75947d4e7002aeeb718119ff000684cb.setContent(html_f7bce006f396432cab269dfca94c037c);
+            
+        
+
+        circle_marker_90e47f8611bba35661eab0b831afb42c.bindPopup(popup_75947d4e7002aeeb718119ff000684cb)
+        ;
+
+        
+    
+    
+            var circle_marker_7ec4d9ff0f145e48b1e3c1d47816d146 = L.circleMarker(
+                [16.55998, 74.33633],
+                {"bubblingMouseEvents": true, "color": "#d1495b", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#d1495b", "fillOpacity": 0.85, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 4, "stroke": true, "weight": 1}
+            ).addTo(feature_group_5de8ec93113ea8cbf7aa1fc286d80b56);
+        
+    
+        var popup_d5e3ed72c537da87afd2c859d761f704 = L.popup({
+  "maxWidth": 220,
+});
+
+        
+            
+                var html_c8e8751984ca0f3fcf83da816d9a826d = $(`<div id="html_c8e8751984ca0f3fcf83da816d9a826d" style="width: 100.0%; height: 100.0%;"><b>F0072</b> — Kolhapur<br>Crop age: 12 months<br>NDVI trend: -3.87%<br>Harvest ready: Yes<br>Total residue: 66.3 tons</div>`)[0];
+                popup_d5e3ed72c537da87afd2c859d761f704.setContent(html_c8e8751984ca0f3fcf83da816d9a826d);
+            
+        
+
+        circle_marker_7ec4d9ff0f145e48b1e3c1d47816d146.bindPopup(popup_d5e3ed72c537da87afd2c859d761f704)
+        ;
+
+        
+    
+    
+            var circle_marker_421f557c5a400cb583e5f7a9998f16b1 = L.circleMarker(
+                [16.70863, 74.35342],
+                {"bubblingMouseEvents": true, "color": "#8ab17d", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#8ab17d", "fillOpacity": 0.5, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 3, "stroke": true, "weight": 1}
+            ).addTo(feature_group_5de8ec93113ea8cbf7aa1fc286d80b56);
+        
+    
+        var popup_127fbdc7855d2cce273468dbfaf28307 = L.popup({
+  "maxWidth": 220,
+});
+
+        
+            
+                var html_f7a55ce1c9e07cb40d1f94f0324452b5 = $(`<div id="html_f7a55ce1c9e07cb40d1f94f0324452b5" style="width: 100.0%; height: 100.0%;"><b>F0073</b> — Kolhapur<br>Crop age: 9 months<br>NDVI trend: 2.07%<br>Harvest ready: No<br>Total residue: 44.9 tons</div>`)[0];
+                popup_127fbdc7855d2cce273468dbfaf28307.setContent(html_f7a55ce1c9e07cb40d1f94f0324452b5);
+            
+        
+
+        circle_marker_421f557c5a400cb583e5f7a9998f16b1.bindPopup(popup_127fbdc7855d2cce273468dbfaf28307)
+        ;
+
+        
+    
+    
+            var circle_marker_f8cf68c8903ac534f999798aee51fa06 = L.circleMarker(
+                [19.01275, 74.87197],
+                {"bubblingMouseEvents": true, "color": "#d1495b", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#d1495b", "fillOpacity": 0.85, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 4, "stroke": true, "weight": 1}
+            ).addTo(feature_group_5de8ec93113ea8cbf7aa1fc286d80b56);
+        
+    
+        var popup_2913807f07c8eeb354082c29b1184f78 = L.popup({
+  "maxWidth": 220,
+});
+
+        
+            
+                var html_6b29d1d82cc1924afe9ccf1698263aa2 = $(`<div id="html_6b29d1d82cc1924afe9ccf1698263aa2" style="width: 100.0%; height: 100.0%;"><b>F0074</b> — Ahmednagar<br>Crop age: 12 months<br>NDVI trend: -5.3%<br>Harvest ready: Yes<br>Total residue: 65.4 tons</div>`)[0];
+                popup_2913807f07c8eeb354082c29b1184f78.setContent(html_6b29d1d82cc1924afe9ccf1698263aa2);
+            
+        
+
+        circle_marker_f8cf68c8903ac534f999798aee51fa06.bindPopup(popup_2913807f07c8eeb354082c29b1184f78)
+        ;
+
+        
+    
+    
+            var circle_marker_d6e50c30d33974ebad77f1607de3b2c8 = L.circleMarker(
+                [18.56395, 73.8601],
+                {"bubblingMouseEvents": true, "color": "#d1495b", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#d1495b", "fillOpacity": 0.85, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 4, "stroke": true, "weight": 1}
+            ).addTo(feature_group_5de8ec93113ea8cbf7aa1fc286d80b56);
+        
+    
+        var popup_2f18028644426560b6de5fc7e1652c82 = L.popup({
+  "maxWidth": 220,
+});
+
+        
+            
+                var html_36b4b7f32cdc174c633000a1c1428790 = $(`<div id="html_36b4b7f32cdc174c633000a1c1428790" style="width: 100.0%; height: 100.0%;"><b>F0075</b> — Pune<br>Crop age: 15 months<br>NDVI trend: -9.37%<br>Harvest ready: Yes<br>Total residue: 92.4 tons</div>`)[0];
+                popup_2f18028644426560b6de5fc7e1652c82.setContent(html_36b4b7f32cdc174c633000a1c1428790);
+            
+        
+
+        circle_marker_d6e50c30d33974ebad77f1607de3b2c8.bindPopup(popup_2f18028644426560b6de5fc7e1652c82)
+        ;
+
+        
+    
+    
+            var circle_marker_ebe6a766b9c5482edca4dcc59c49c313 = L.circleMarker(
+                [18.42271, 73.85715],
+                {"bubblingMouseEvents": true, "color": "#d1495b", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#d1495b", "fillOpacity": 0.85, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 4, "stroke": true, "weight": 1}
+            ).addTo(feature_group_5de8ec93113ea8cbf7aa1fc286d80b56);
+        
+    
+        var popup_e1e71f24b4cd41460025b789fa812351 = L.popup({
+  "maxWidth": 220,
+});
+
+        
+            
+                var html_e0c5ce63085cae9c99d063c311f229aa = $(`<div id="html_e0c5ce63085cae9c99d063c311f229aa" style="width: 100.0%; height: 100.0%;"><b>F0076</b> — Pune<br>Crop age: 17 months<br>NDVI trend: -5.57%<br>Harvest ready: Yes<br>Total residue: 18.9 tons</div>`)[0];
+                popup_e1e71f24b4cd41460025b789fa812351.setContent(html_e0c5ce63085cae9c99d063c311f229aa);
+            
+        
+
+        circle_marker_ebe6a766b9c5482edca4dcc59c49c313.bindPopup(popup_e1e71f24b4cd41460025b789fa812351)
+        ;
+
+        
+    
+    
+            var circle_marker_2147b42147b3f03aba66a91b7f6e8b41 = L.circleMarker(
+                [19.15208, 74.83749],
+                {"bubblingMouseEvents": true, "color": "#d1495b", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#d1495b", "fillOpacity": 0.85, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 4, "stroke": true, "weight": 1}
+            ).addTo(feature_group_5de8ec93113ea8cbf7aa1fc286d80b56);
+        
+    
+        var popup_c26e4b517c472dc857c73ede615d8186 = L.popup({
+  "maxWidth": 220,
+});
+
+        
+            
+                var html_381d020a5fb601f292ad67480096273e = $(`<div id="html_381d020a5fb601f292ad67480096273e" style="width: 100.0%; height: 100.0%;"><b>F0077</b> — Ahmednagar<br>Crop age: 16 months<br>NDVI trend: -5.87%<br>Harvest ready: Yes<br>Total residue: 62.2 tons</div>`)[0];
+                popup_c26e4b517c472dc857c73ede615d8186.setContent(html_381d020a5fb601f292ad67480096273e);
+            
+        
+
+        circle_marker_2147b42147b3f03aba66a91b7f6e8b41.bindPopup(popup_c26e4b517c472dc857c73ede615d8186)
+        ;
+
+        
+    
+    
+            var circle_marker_261f8bfdb440ec083a355af2ade5758f = L.circleMarker(
+                [16.67102, 74.28829],
+                {"bubblingMouseEvents": true, "color": "#d1495b", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#d1495b", "fillOpacity": 0.85, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 4, "stroke": true, "weight": 1}
+            ).addTo(feature_group_5de8ec93113ea8cbf7aa1fc286d80b56);
+        
+    
+        var popup_9f36462f784ecf0ce6e2b25afeeade7c = L.popup({
+  "maxWidth": 220,
+});
+
+        
+            
+                var html_a24c3fbfd0c5c0d74a435fab0476bc64 = $(`<div id="html_a24c3fbfd0c5c0d74a435fab0476bc64" style="width: 100.0%; height: 100.0%;"><b>F0078</b> — Kolhapur<br>Crop age: 16 months<br>NDVI trend: -6.46%<br>Harvest ready: Yes<br>Total residue: 43.6 tons</div>`)[0];
+                popup_9f36462f784ecf0ce6e2b25afeeade7c.setContent(html_a24c3fbfd0c5c0d74a435fab0476bc64);
+            
+        
+
+        circle_marker_261f8bfdb440ec083a355af2ade5758f.bindPopup(popup_9f36462f784ecf0ce6e2b25afeeade7c)
+        ;
+
+        
+    
+    
+            var circle_marker_931e1aa5f4669c3ddba6e0fbefee930e = L.circleMarker(
+                [16.98342, 74.64209],
+                {"bubblingMouseEvents": true, "color": "#8ab17d", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#8ab17d", "fillOpacity": 0.5, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 3, "stroke": true, "weight": 1}
+            ).addTo(feature_group_5de8ec93113ea8cbf7aa1fc286d80b56);
+        
+    
+        var popup_ab86edced16d9f180949ba69744da358 = L.popup({
+  "maxWidth": 220,
+});
+
+        
+            
+                var html_cf7b96310b7c13a98cfd49084e2716dc = $(`<div id="html_cf7b96310b7c13a98cfd49084e2716dc" style="width: 100.0%; height: 100.0%;"><b>F0079</b> — Sangli<br>Crop age: 8 months<br>NDVI trend: 4.96%<br>Harvest ready: No<br>Total residue: 59.1 tons</div>`)[0];
+                popup_ab86edced16d9f180949ba69744da358.setContent(html_cf7b96310b7c13a98cfd49084e2716dc);
+            
+        
+
+        circle_marker_931e1aa5f4669c3ddba6e0fbefee930e.bindPopup(popup_ab86edced16d9f180949ba69744da358)
+        ;
+
+        
+    
+    
+            var circle_marker_5e957159ebc2e8f64b620908ee426dd5 = L.circleMarker(
+                [16.59626, 74.33204],
+                {"bubblingMouseEvents": true, "color": "#d1495b", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#d1495b", "fillOpacity": 0.85, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 4, "stroke": true, "weight": 1}
+            ).addTo(feature_group_5de8ec93113ea8cbf7aa1fc286d80b56);
+        
+    
+        var popup_a586ad2a044ea88e0f6b151c1fd1ce4c = L.popup({
+  "maxWidth": 220,
+});
+
+        
+            
+                var html_7bfc1cd05d43f7f6b930c2fd8dba7f8f = $(`<div id="html_7bfc1cd05d43f7f6b930c2fd8dba7f8f" style="width: 100.0%; height: 100.0%;"><b>F0080</b> — Kolhapur<br>Crop age: 16 months<br>NDVI trend: -7.66%<br>Harvest ready: Yes<br>Total residue: 77.4 tons</div>`)[0];
+                popup_a586ad2a044ea88e0f6b151c1fd1ce4c.setContent(html_7bfc1cd05d43f7f6b930c2fd8dba7f8f);
+            
+        
+
+        circle_marker_5e957159ebc2e8f64b620908ee426dd5.bindPopup(popup_a586ad2a044ea88e0f6b151c1fd1ce4c)
+        ;
+
+        
+    
+    
+            var circle_marker_4e3494af725406d947050196b330a72a = L.circleMarker(
+                [19.04712, 74.865],
+                {"bubblingMouseEvents": true, "color": "#d1495b", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#d1495b", "fillOpacity": 0.85, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 4, "stroke": true, "weight": 1}
+            ).addTo(feature_group_5de8ec93113ea8cbf7aa1fc286d80b56);
+        
+    
+        var popup_30d6ed1ab1fc7b787b72de2cae1b0c84 = L.popup({
+  "maxWidth": 220,
+});
+
+        
+            
+                var html_c208409e149fd80dd18cf527ddd26c67 = $(`<div id="html_c208409e149fd80dd18cf527ddd26c67" style="width: 100.0%; height: 100.0%;"><b>F0081</b> — Ahmednagar<br>Crop age: 14 months<br>NDVI trend: -6.96%<br>Harvest ready: Yes<br>Total residue: 136.3 tons</div>`)[0];
+                popup_30d6ed1ab1fc7b787b72de2cae1b0c84.setContent(html_c208409e149fd80dd18cf527ddd26c67);
+            
+        
+
+        circle_marker_4e3494af725406d947050196b330a72a.bindPopup(popup_30d6ed1ab1fc7b787b72de2cae1b0c84)
+        ;
+
+        
+    
+    
+            var circle_marker_98852db422851894cf8d04de9cf22117 = L.circleMarker(
+                [18.40444, 73.8081],
+                {"bubblingMouseEvents": true, "color": "#d1495b", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#d1495b", "fillOpacity": 0.85, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 4, "stroke": true, "weight": 1}
+            ).addTo(feature_group_5de8ec93113ea8cbf7aa1fc286d80b56);
+        
+    
+        var popup_e753d4baa3fe4aa27e7707c33c754acc = L.popup({
+  "maxWidth": 220,
+});
+
+        
+            
+                var html_5570a816e426eecf1a84b42f6e08d51e = $(`<div id="html_5570a816e426eecf1a84b42f6e08d51e" style="width: 100.0%; height: 100.0%;"><b>F0082</b> — Pune<br>Crop age: 16 months<br>NDVI trend: -9.33%<br>Harvest ready: Yes<br>Total residue: 67.7 tons</div>`)[0];
+                popup_e753d4baa3fe4aa27e7707c33c754acc.setContent(html_5570a816e426eecf1a84b42f6e08d51e);
+            
+        
+
+        circle_marker_98852db422851894cf8d04de9cf22117.bindPopup(popup_e753d4baa3fe4aa27e7707c33c754acc)
+        ;
+
+        
+    
+    
+            var circle_marker_0d2b899ac11dfdcdeaff999a6bbc7900 = L.circleMarker(
+                [16.97981, 74.54417],
+                {"bubblingMouseEvents": true, "color": "#d1495b", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#d1495b", "fillOpacity": 0.85, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 4, "stroke": true, "weight": 1}
+            ).addTo(feature_group_5de8ec93113ea8cbf7aa1fc286d80b56);
+        
+    
+        var popup_96d4354f05a4121d3b5313ca33b57509 = L.popup({
+  "maxWidth": 220,
+});
+
+        
+            
+                var html_78fc83c64a322898b58c536a92035315 = $(`<div id="html_78fc83c64a322898b58c536a92035315" style="width: 100.0%; height: 100.0%;"><b>F0083</b> — Sangli<br>Crop age: 15 months<br>NDVI trend: -9.37%<br>Harvest ready: Yes<br>Total residue: 125.7 tons</div>`)[0];
+                popup_96d4354f05a4121d3b5313ca33b57509.setContent(html_78fc83c64a322898b58c536a92035315);
+            
+        
+
+        circle_marker_0d2b899ac11dfdcdeaff999a6bbc7900.bindPopup(popup_96d4354f05a4121d3b5313ca33b57509)
+        ;
+
+        
+    
+    
+            var circle_marker_f966790dd160a762ee85913162583dd1 = L.circleMarker(
+                [16.8182, 74.12149],
+                {"bubblingMouseEvents": true, "color": "#8ab17d", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#8ab17d", "fillOpacity": 0.5, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 3, "stroke": true, "weight": 1}
+            ).addTo(feature_group_5de8ec93113ea8cbf7aa1fc286d80b56);
+        
+    
+        var popup_25cd2520b1819ca76641f8f4195f244b = L.popup({
+  "maxWidth": 220,
+});
+
+        
+            
+                var html_b63a2cc072f96eb18db3252beef9ad7b = $(`<div id="html_b63a2cc072f96eb18db3252beef9ad7b" style="width: 100.0%; height: 100.0%;"><b>F0084</b> — Kolhapur<br>Crop age: 8 months<br>NDVI trend: 5.7%<br>Harvest ready: No<br>Total residue: 67.9 tons</div>`)[0];
+                popup_25cd2520b1819ca76641f8f4195f244b.setContent(html_b63a2cc072f96eb18db3252beef9ad7b);
+            
+        
+
+        circle_marker_f966790dd160a762ee85913162583dd1.bindPopup(popup_25cd2520b1819ca76641f8f4195f244b)
+        ;
+
+        
+    
+    
+            var circle_marker_b28b48d0f481f7b9a02e9301000af032 = L.circleMarker(
+                [16.77978, 74.60498],
+                {"bubblingMouseEvents": true, "color": "#d1495b", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#d1495b", "fillOpacity": 0.85, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 4, "stroke": true, "weight": 1}
+            ).addTo(feature_group_5de8ec93113ea8cbf7aa1fc286d80b56);
+        
+    
+        var popup_2e6d21eac343c937984167565642e83c = L.popup({
+  "maxWidth": 220,
+});
+
+        
+            
+                var html_47ac808bb5bb151375a690bef0e5bf49 = $(`<div id="html_47ac808bb5bb151375a690bef0e5bf49" style="width: 100.0%; height: 100.0%;"><b>F0085</b> — Sangli<br>Crop age: 15 months<br>NDVI trend: -4.76%<br>Harvest ready: Yes<br>Total residue: 28.4 tons</div>`)[0];
+                popup_2e6d21eac343c937984167565642e83c.setContent(html_47ac808bb5bb151375a690bef0e5bf49);
+            
+        
+
+        circle_marker_b28b48d0f481f7b9a02e9301000af032.bindPopup(popup_2e6d21eac343c937984167565642e83c)
+        ;
+
+        
+    
+    
+            var circle_marker_4e5a0099e75b20fb9d03ca73fa61fac6 = L.circleMarker(
+                [16.9004, 74.44228],
+                {"bubblingMouseEvents": true, "color": "#d1495b", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#d1495b", "fillOpacity": 0.85, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 4, "stroke": true, "weight": 1}
+            ).addTo(feature_group_5de8ec93113ea8cbf7aa1fc286d80b56);
+        
+    
+        var popup_c1697a022dc67d2063fb9d40e9e23088 = L.popup({
+  "maxWidth": 220,
+});
+
+        
+            
+                var html_bf33c9c4148b0f8b0c2e8e28864510f1 = $(`<div id="html_bf33c9c4148b0f8b0c2e8e28864510f1" style="width: 100.0%; height: 100.0%;"><b>F0086</b> — Sangli<br>Crop age: 15 months<br>NDVI trend: -6.34%<br>Harvest ready: Yes<br>Total residue: 77.1 tons</div>`)[0];
+                popup_c1697a022dc67d2063fb9d40e9e23088.setContent(html_bf33c9c4148b0f8b0c2e8e28864510f1);
+            
+        
+
+        circle_marker_4e5a0099e75b20fb9d03ca73fa61fac6.bindPopup(popup_c1697a022dc67d2063fb9d40e9e23088)
+        ;
+
+        
+    
+    
+            var circle_marker_6eb5b67ea4e0d928c264bbce8243f58a = L.circleMarker(
+                [18.61557, 73.84638],
+                {"bubblingMouseEvents": true, "color": "#8ab17d", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#8ab17d", "fillOpacity": 0.5, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 3, "stroke": true, "weight": 1}
+            ).addTo(feature_group_5de8ec93113ea8cbf7aa1fc286d80b56);
+        
+    
+        var popup_de8052513cf14724890895249482ae7e = L.popup({
+  "maxWidth": 220,
+});
+
+        
+            
+                var html_68ecd6b1fe0b522edf2aec24cf50432a = $(`<div id="html_68ecd6b1fe0b522edf2aec24cf50432a" style="width: 100.0%; height: 100.0%;"><b>F0087</b> — Pune<br>Crop age: 10 months<br>NDVI trend: -3.97%<br>Harvest ready: No<br>Total residue: 72.7 tons</div>`)[0];
+                popup_de8052513cf14724890895249482ae7e.setContent(html_68ecd6b1fe0b522edf2aec24cf50432a);
+            
+        
+
+        circle_marker_6eb5b67ea4e0d928c264bbce8243f58a.bindPopup(popup_de8052513cf14724890895249482ae7e)
+        ;
+
+        
+    
+    
+            var circle_marker_1b21033c18df9c49f2a99c622bca2795 = L.circleMarker(
+                [18.53696, 73.86949],
+                {"bubblingMouseEvents": true, "color": "#8ab17d", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#8ab17d", "fillOpacity": 0.5, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 3, "stroke": true, "weight": 1}
+            ).addTo(feature_group_5de8ec93113ea8cbf7aa1fc286d80b56);
+        
+    
+        var popup_62d8f029d61ecc73f006a6e074820a8e = L.popup({
+  "maxWidth": 220,
+});
+
+        
+            
+                var html_21bef62f451837ab369da57006f6eb3c = $(`<div id="html_21bef62f451837ab369da57006f6eb3c" style="width: 100.0%; height: 100.0%;"><b>F0088</b> — Pune<br>Crop age: 8 months<br>NDVI trend: 6.1%<br>Harvest ready: No<br>Total residue: 66.7 tons</div>`)[0];
+                popup_62d8f029d61ecc73f006a6e074820a8e.setContent(html_21bef62f451837ab369da57006f6eb3c);
+            
+        
+
+        circle_marker_1b21033c18df9c49f2a99c622bca2795.bindPopup(popup_62d8f029d61ecc73f006a6e074820a8e)
+        ;
+
+        
+    
+    
+            var circle_marker_45518e90790f65d36b5e9b505186781d = L.circleMarker(
+                [19.1037, 74.68396],
+                {"bubblingMouseEvents": true, "color": "#d1495b", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#d1495b", "fillOpacity": 0.85, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 4, "stroke": true, "weight": 1}
+            ).addTo(feature_group_5de8ec93113ea8cbf7aa1fc286d80b56);
+        
+    
+        var popup_fc83738081ee055a891ae4513afd5501 = L.popup({
+  "maxWidth": 220,
+});
+
+        
+            
+                var html_cb3c47a1bdb37cdf36f9eeb5a82dab21 = $(`<div id="html_cb3c47a1bdb37cdf36f9eeb5a82dab21" style="width: 100.0%; height: 100.0%;"><b>F0089</b> — Ahmednagar<br>Crop age: 15 months<br>NDVI trend: -9.26%<br>Harvest ready: Yes<br>Total residue: 58.9 tons</div>`)[0];
+                popup_fc83738081ee055a891ae4513afd5501.setContent(html_cb3c47a1bdb37cdf36f9eeb5a82dab21);
+            
+        
+
+        circle_marker_45518e90790f65d36b5e9b505186781d.bindPopup(popup_fc83738081ee055a891ae4513afd5501)
+        ;
+
+        
+    
+    
+            var circle_marker_6b9d48ae806e707003615be59b2a4e2b = L.circleMarker(
+                [17.58246, 75.93365],
+                {"bubblingMouseEvents": true, "color": "#8ab17d", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#8ab17d", "fillOpacity": 0.5, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 3, "stroke": true, "weight": 1}
+            ).addTo(feature_group_5de8ec93113ea8cbf7aa1fc286d80b56);
+        
+    
+        var popup_e5b6cbea5f6b358096148435bb573dee = L.popup({
+  "maxWidth": 220,
+});
+
+        
+            
+                var html_dd42a1d79e002db2d6996cef43988c7e = $(`<div id="html_dd42a1d79e002db2d6996cef43988c7e" style="width: 100.0%; height: 100.0%;"><b>F0090</b> — Solapur<br>Crop age: 10 months<br>NDVI trend: -3.6%<br>Harvest ready: No<br>Total residue: 25.9 tons</div>`)[0];
+                popup_e5b6cbea5f6b358096148435bb573dee.setContent(html_dd42a1d79e002db2d6996cef43988c7e);
+            
+        
+
+        circle_marker_6b9d48ae806e707003615be59b2a4e2b.bindPopup(popup_e5b6cbea5f6b358096148435bb573dee)
+        ;
+
+        
+    
+    
+            var circle_marker_ee97ee4718434c3b6b748214fb409c3f = L.circleMarker(
+                [16.58293, 74.10245],
+                {"bubblingMouseEvents": true, "color": "#8ab17d", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#8ab17d", "fillOpacity": 0.5, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 3, "stroke": true, "weight": 1}
+            ).addTo(feature_group_5de8ec93113ea8cbf7aa1fc286d80b56);
+        
+    
+        var popup_df0af64c17ae99b85ede9e7e248a6dca = L.popup({
+  "maxWidth": 220,
+});
+
+        
+            
+                var html_7bfa4f8932c697961d42988da11b1806 = $(`<div id="html_7bfa4f8932c697961d42988da11b1806" style="width: 100.0%; height: 100.0%;"><b>F0091</b> — Kolhapur<br>Crop age: 10 months<br>NDVI trend: -3.24%<br>Harvest ready: No<br>Total residue: 72.0 tons</div>`)[0];
+                popup_df0af64c17ae99b85ede9e7e248a6dca.setContent(html_7bfa4f8932c697961d42988da11b1806);
+            
+        
+
+        circle_marker_ee97ee4718434c3b6b748214fb409c3f.bindPopup(popup_df0af64c17ae99b85ede9e7e248a6dca)
+        ;
+
+        
+    
+    
+            var circle_marker_8c655d9e1fffdd028471cb629744909b = L.circleMarker(
+                [18.63956, 73.7179],
+                {"bubblingMouseEvents": true, "color": "#8ab17d", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#8ab17d", "fillOpacity": 0.5, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 3, "stroke": true, "weight": 1}
+            ).addTo(feature_group_5de8ec93113ea8cbf7aa1fc286d80b56);
+        
+    
+        var popup_0ed7d839228ac87d1b2027b9c08c9ae4 = L.popup({
+  "maxWidth": 220,
+});
+
+        
+            
+                var html_5abcfc4970791f4719018ef6a195de82 = $(`<div id="html_5abcfc4970791f4719018ef6a195de82" style="width: 100.0%; height: 100.0%;"><b>F0092</b> — Pune<br>Crop age: 8 months<br>NDVI trend: -0.12%<br>Harvest ready: No<br>Total residue: 67.9 tons</div>`)[0];
+                popup_0ed7d839228ac87d1b2027b9c08c9ae4.setContent(html_5abcfc4970791f4719018ef6a195de82);
+            
+        
+
+        circle_marker_8c655d9e1fffdd028471cb629744909b.bindPopup(popup_0ed7d839228ac87d1b2027b9c08c9ae4)
+        ;
+
+        
+    
+    
+            var circle_marker_b9355ca68538923b40aea237a5d03ab9 = L.circleMarker(
+                [19.21493, 74.84478],
+                {"bubblingMouseEvents": true, "color": "#d1495b", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#d1495b", "fillOpacity": 0.85, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 4, "stroke": true, "weight": 1}
+            ).addTo(feature_group_5de8ec93113ea8cbf7aa1fc286d80b56);
+        
+    
+        var popup_af65af0ed70b05a44809e9e4469b7c45 = L.popup({
+  "maxWidth": 220,
+});
+
+        
+            
+                var html_f0f8edc4cfd2b6ad697674d88362cdf1 = $(`<div id="html_f0f8edc4cfd2b6ad697674d88362cdf1" style="width: 100.0%; height: 100.0%;"><b>F0093</b> — Ahmednagar<br>Crop age: 12 months<br>NDVI trend: -3.25%<br>Harvest ready: Yes<br>Total residue: 44.8 tons</div>`)[0];
+                popup_af65af0ed70b05a44809e9e4469b7c45.setContent(html_f0f8edc4cfd2b6ad697674d88362cdf1);
+            
+        
+
+        circle_marker_b9355ca68538923b40aea237a5d03ab9.bindPopup(popup_af65af0ed70b05a44809e9e4469b7c45)
+        ;
+
+        
+    
+    
+            var circle_marker_bae947579bc885e9eecfcd7d8e25ae99 = L.circleMarker(
+                [17.69983, 75.86446],
+                {"bubblingMouseEvents": true, "color": "#d1495b", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#d1495b", "fillOpacity": 0.85, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 4, "stroke": true, "weight": 1}
+            ).addTo(feature_group_5de8ec93113ea8cbf7aa1fc286d80b56);
+        
+    
+        var popup_90c04526a7a9f64d70ca99b5c4d6b502 = L.popup({
+  "maxWidth": 220,
+});
+
+        
+            
+                var html_47a2baa4655f6910b13d84fec0f6dbf9 = $(`<div id="html_47a2baa4655f6910b13d84fec0f6dbf9" style="width: 100.0%; height: 100.0%;"><b>F0094</b> — Solapur<br>Crop age: 17 months<br>NDVI trend: -6.82%<br>Harvest ready: Yes<br>Total residue: 24.8 tons</div>`)[0];
+                popup_90c04526a7a9f64d70ca99b5c4d6b502.setContent(html_47a2baa4655f6910b13d84fec0f6dbf9);
+            
+        
+
+        circle_marker_bae947579bc885e9eecfcd7d8e25ae99.bindPopup(popup_90c04526a7a9f64d70ca99b5c4d6b502)
+        ;
+
+        
+    
+    
+            var circle_marker_a6cdd383cf3b3411cfa0b20a7b071c4d = L.circleMarker(
+                [19.04651, 74.63612],
+                {"bubblingMouseEvents": true, "color": "#d1495b", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#d1495b", "fillOpacity": 0.85, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 4, "stroke": true, "weight": 1}
+            ).addTo(feature_group_5de8ec93113ea8cbf7aa1fc286d80b56);
+        
+    
+        var popup_6e1299e004658a31e78af6dd34d6aad3 = L.popup({
+  "maxWidth": 220,
+});
+
+        
+            
+                var html_95c6541b9b0b0df68090516abe99a200 = $(`<div id="html_95c6541b9b0b0df68090516abe99a200" style="width: 100.0%; height: 100.0%;"><b>F0095</b> — Ahmednagar<br>Crop age: 14 months<br>NDVI trend: -11.42%<br>Harvest ready: Yes<br>Total residue: 116.1 tons</div>`)[0];
+                popup_6e1299e004658a31e78af6dd34d6aad3.setContent(html_95c6541b9b0b0df68090516abe99a200);
+            
+        
+
+        circle_marker_a6cdd383cf3b3411cfa0b20a7b071c4d.bindPopup(popup_6e1299e004658a31e78af6dd34d6aad3)
+        ;
+
+        
+    
+    
+            var circle_marker_27f17e40d91d978c485b2b70cf840ef9 = L.circleMarker(
+                [17.61466, 75.91307],
+                {"bubblingMouseEvents": true, "color": "#d1495b", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#d1495b", "fillOpacity": 0.85, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 4, "stroke": true, "weight": 1}
+            ).addTo(feature_group_5de8ec93113ea8cbf7aa1fc286d80b56);
+        
+    
+        var popup_f62f77f31a55a0862a3b8b3193ad4a5c = L.popup({
+  "maxWidth": 220,
+});
+
+        
+            
+                var html_c3a2938909805ed744a0419a5e394b61 = $(`<div id="html_c3a2938909805ed744a0419a5e394b61" style="width: 100.0%; height: 100.0%;"><b>F0096</b> — Solapur<br>Crop age: 17 months<br>NDVI trend: -6.86%<br>Harvest ready: Yes<br>Total residue: 66.2 tons</div>`)[0];
+                popup_f62f77f31a55a0862a3b8b3193ad4a5c.setContent(html_c3a2938909805ed744a0419a5e394b61);
+            
+        
+
+        circle_marker_27f17e40d91d978c485b2b70cf840ef9.bindPopup(popup_f62f77f31a55a0862a3b8b3193ad4a5c)
+        ;
+
+        
+    
+    
+            var circle_marker_a0b54bd5061205d0eadbaba92a202e35 = L.circleMarker(
+                [17.72769, 75.9874],
+                {"bubblingMouseEvents": true, "color": "#d1495b", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#d1495b", "fillOpacity": 0.85, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 4, "stroke": true, "weight": 1}
+            ).addTo(feature_group_5de8ec93113ea8cbf7aa1fc286d80b56);
+        
+    
+        var popup_3f6fdbf041ca78ae0a68590e39eaeb5a = L.popup({
+  "maxWidth": 220,
+});
+
+        
+            
+                var html_5c6f358d404f459c30adc8325fad7975 = $(`<div id="html_5c6f358d404f459c30adc8325fad7975" style="width: 100.0%; height: 100.0%;"><b>F0097</b> — Solapur<br>Crop age: 16 months<br>NDVI trend: -5.43%<br>Harvest ready: Yes<br>Total residue: 87.4 tons</div>`)[0];
+                popup_3f6fdbf041ca78ae0a68590e39eaeb5a.setContent(html_5c6f358d404f459c30adc8325fad7975);
+            
+        
+
+        circle_marker_a0b54bd5061205d0eadbaba92a202e35.bindPopup(popup_3f6fdbf041ca78ae0a68590e39eaeb5a)
+        ;
+
+        
+    
+    
+            var circle_marker_da68efc3bcf31a3de7799ceb52173d05 = L.circleMarker(
+                [17.77903, 75.82115],
+                {"bubblingMouseEvents": true, "color": "#d1495b", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#d1495b", "fillOpacity": 0.85, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 4, "stroke": true, "weight": 1}
+            ).addTo(feature_group_5de8ec93113ea8cbf7aa1fc286d80b56);
+        
+    
+        var popup_5187d9f96e0506ed40386b05aa3b554d = L.popup({
+  "maxWidth": 220,
+});
+
+        
+            
+                var html_1a062953e8354176f5a364755bac90a8 = $(`<div id="html_1a062953e8354176f5a364755bac90a8" style="width: 100.0%; height: 100.0%;"><b>F0098</b> — Solapur<br>Crop age: 14 months<br>NDVI trend: -8.21%<br>Harvest ready: Yes<br>Total residue: 115.0 tons</div>`)[0];
+                popup_5187d9f96e0506ed40386b05aa3b554d.setContent(html_1a062953e8354176f5a364755bac90a8);
+            
+        
+
+        circle_marker_da68efc3bcf31a3de7799ceb52173d05.bindPopup(popup_5187d9f96e0506ed40386b05aa3b554d)
+        ;
+
+        
+    
+    
+            var circle_marker_cee265a2bfd93e45fb183af0d96bfb7c = L.circleMarker(
+                [16.82113, 74.28017],
+                {"bubblingMouseEvents": true, "color": "#d1495b", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#d1495b", "fillOpacity": 0.85, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 4, "stroke": true, "weight": 1}
+            ).addTo(feature_group_5de8ec93113ea8cbf7aa1fc286d80b56);
+        
+    
+        var popup_86811a39f02fecb61bfdbd2619455503 = L.popup({
+  "maxWidth": 220,
+});
+
+        
+            
+                var html_497bdb3a06f2a4f5cb03d70e1170a91f = $(`<div id="html_497bdb3a06f2a4f5cb03d70e1170a91f" style="width: 100.0%; height: 100.0%;"><b>F0099</b> — Kolhapur<br>Crop age: 16 months<br>NDVI trend: -2.54%<br>Harvest ready: Yes<br>Total residue: 118.4 tons</div>`)[0];
+                popup_86811a39f02fecb61bfdbd2619455503.setContent(html_497bdb3a06f2a4f5cb03d70e1170a91f);
+            
+        
+
+        circle_marker_cee265a2bfd93e45fb183af0d96bfb7c.bindPopup(popup_86811a39f02fecb61bfdbd2619455503)
+        ;
+
+        
+    
+    
+            var circle_marker_0387f36559aa0ea1c84ed758d7f22c75 = L.circleMarker(
+                [16.78896, 74.1189],
+                {"bubblingMouseEvents": true, "color": "#d1495b", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#d1495b", "fillOpacity": 0.85, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 4, "stroke": true, "weight": 1}
+            ).addTo(feature_group_5de8ec93113ea8cbf7aa1fc286d80b56);
+        
+    
+        var popup_d77bb4e7c59fb0e4eb2fd4091b8617dd = L.popup({
+  "maxWidth": 220,
+});
+
+        
+            
+                var html_31db346f5b1ed9f81aeea599a584e7c6 = $(`<div id="html_31db346f5b1ed9f81aeea599a584e7c6" style="width: 100.0%; height: 100.0%;"><b>F0100</b> — Kolhapur<br>Crop age: 15 months<br>NDVI trend: -6.6%<br>Harvest ready: Yes<br>Total residue: 96.6 tons</div>`)[0];
+                popup_d77bb4e7c59fb0e4eb2fd4091b8617dd.setContent(html_31db346f5b1ed9f81aeea599a584e7c6);
+            
+        
+
+        circle_marker_0387f36559aa0ea1c84ed758d7f22c75.bindPopup(popup_d77bb4e7c59fb0e4eb2fd4091b8617dd)
+        ;
+
+        
+    
+    
+            feature_group_5de8ec93113ea8cbf7aa1fc286d80b56.addTo(map_c95fad225fd36fbeb4a2eb1ce317e370);
+        
+    
+            var feature_group_60e0bbd8a3adc68a9b261edebb1a20ae = L.featureGroup(
+                {
+}
+            );
+        
+    
+            var circle_marker_c51ea1281279018030f675aeaf3086fe = L.circleMarker(
+                [19.15721, 74.82512],
+                {"bubblingMouseEvents": true, "color": "#e07a00", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#ffb703", "fillOpacity": 0.35, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 22.845731612224558, "stroke": true, "weight": 2}
+            ).addTo(feature_group_60e0bbd8a3adc68a9b261edebb1a20ae);
+        
+    
+        var popup_a74e2324d7195b6cc838ae7c257fb4e6 = L.popup({
+  "maxWidth": 240,
+});
+
+        
+            
+                var html_70e67665002aaead57d494e4f9650426 = $(`<div id="html_70e67665002aaead57d494e4f9650426" style="width: 100.0%; height: 100.0%;"><b>Cluster 0</b> — Ahmednagar<br>Farms in cluster: 3<br>Total recoverable biomass: 246.6 tons<br>Avg. NDVI trend: -7.50333%</div>`)[0];
+                popup_a74e2324d7195b6cc838ae7c257fb4e6.setContent(html_70e67665002aaead57d494e4f9650426);
+            
+        
+
+        circle_marker_c51ea1281279018030f675aeaf3086fe.bindPopup(popup_a74e2324d7195b6cc838ae7c257fb4e6)
+        ;
+
+        
+    
+    
+            var circle_marker_1765ce13b9ec7d9075a574e6bcf58133 = L.circleMarker(
+                [16.63161, 74.29772],
+                {"bubblingMouseEvents": true, "color": "#e07a00", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#ffb703", "fillOpacity": 0.35, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 31.9718429854023, "stroke": true, "weight": 2}
+            ).addTo(feature_group_60e0bbd8a3adc68a9b261edebb1a20ae);
+        
+    
+        var popup_7992bb86feb0f36fb90c60146b8d4748 = L.popup({
+  "maxWidth": 240,
+});
+
+        
+            
+                var html_207092bd588f74e624b3ce705a16526f = $(`<div id="html_207092bd588f74e624b3ce705a16526f" style="width: 100.0%; height: 100.0%;"><b>Cluster 1</b> — Kolhapur<br>Farms in cluster: 9<br>Total recoverable biomass: 543.4 tons<br>Avg. NDVI trend: -6.04556%</div>`)[0];
+                popup_7992bb86feb0f36fb90c60146b8d4748.setContent(html_207092bd588f74e624b3ce705a16526f);
+            
+        
+
+        circle_marker_1765ce13b9ec7d9075a574e6bcf58133.bindPopup(popup_7992bb86feb0f36fb90c60146b8d4748)
+        ;
+
+        
+    
+    
+            var circle_marker_df1e8bbaa1e1694e0bd86e7f1d5332cc = L.circleMarker(
+                [17.58532, 74.07828],
+                {"bubblingMouseEvents": true, "color": "#e07a00", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#ffb703", "fillOpacity": 0.35, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 21.063223611029656, "stroke": true, "weight": 2}
+            ).addTo(feature_group_60e0bbd8a3adc68a9b261edebb1a20ae);
+        
+    
+        var popup_0cab9dd43e856ce02387677d00239343 = L.popup({
+  "maxWidth": 240,
+});
+
+        
+            
+                var html_2a462cf929dec015416cb1fd8eeff4a4 = $(`<div id="html_2a462cf929dec015416cb1fd8eeff4a4" style="width: 100.0%; height: 100.0%;"><b>Cluster 2</b> — Satara<br>Farms in cluster: 3<br>Total recoverable biomass: 202.2 tons<br>Avg. NDVI trend: -8.24%</div>`)[0];
+                popup_0cab9dd43e856ce02387677d00239343.setContent(html_2a462cf929dec015416cb1fd8eeff4a4);
+            
+        
+
+        circle_marker_df1e8bbaa1e1694e0bd86e7f1d5332cc.bindPopup(popup_0cab9dd43e856ce02387677d00239343)
+        ;
+
+        
+    
+    
+            var circle_marker_cf7659f9255e317ff6a29682abec4f08 = L.circleMarker(
+                [16.82207, 74.38032],
+                {"bubblingMouseEvents": true, "color": "#e07a00", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#ffb703", "fillOpacity": 0.35, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 15.78751882289059, "stroke": true, "weight": 2}
+            ).addTo(feature_group_60e0bbd8a3adc68a9b261edebb1a20ae);
+        
+    
+        var popup_55144205bf9116d1dd04398ac63d2354 = L.popup({
+  "maxWidth": 240,
+});
+
+        
+            
+                var html_e5945f921c9b59129623612d82e60955 = $(`<div id="html_e5945f921c9b59129623612d82e60955" style="width: 100.0%; height: 100.0%;"><b>Cluster 3</b> — Kolhapur<br>Farms in cluster: 2<br>Total recoverable biomass: 96.5 tons<br>Avg. NDVI trend: -9.84%</div>`)[0];
+                popup_55144205bf9116d1dd04398ac63d2354.setContent(html_e5945f921c9b59129623612d82e60955);
+            
+        
+
+        circle_marker_cf7659f9255e317ff6a29682abec4f08.bindPopup(popup_55144205bf9116d1dd04398ac63d2354)
+        ;
+
+        
+    
+    
+            var circle_marker_db482d84f6acfc76cc5558303c82ea54 = L.circleMarker(
+                [16.77744, 74.10974],
+                {"bubblingMouseEvents": true, "color": "#e07a00", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#ffb703", "fillOpacity": 0.35, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 22.361960679622424, "stroke": true, "weight": 2}
+            ).addTo(feature_group_60e0bbd8a3adc68a9b261edebb1a20ae);
+        
+    
+        var popup_aab88dbe8509c45e880f12d3026e2c67 = L.popup({
+  "maxWidth": 240,
+});
+
+        
+            
+                var html_448a52e8b37707724250568853c2aef5 = $(`<div id="html_448a52e8b37707724250568853c2aef5" style="width: 100.0%; height: 100.0%;"><b>Cluster 4</b> — Kolhapur<br>Farms in cluster: 2<br>Total recoverable biomass: 234.1 tons<br>Avg. NDVI trend: -6.37%</div>`)[0];
+                popup_aab88dbe8509c45e880f12d3026e2c67.setContent(html_448a52e8b37707724250568853c2aef5);
+            
+        
+
+        circle_marker_db482d84f6acfc76cc5558303c82ea54.bindPopup(popup_aab88dbe8509c45e880f12d3026e2c67)
+        ;
+
+        
+    
+    
+            var circle_marker_36db8cfcb1ae092eaef68abf77765400 = L.circleMarker(
+                [17.79535, 75.81264],
+                {"bubblingMouseEvents": true, "color": "#e07a00", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#ffb703", "fillOpacity": 0.35, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 19.518092666304064, "stroke": true, "weight": 2}
+            ).addTo(feature_group_60e0bbd8a3adc68a9b261edebb1a20ae);
+        
+    
+        var popup_869651c21ce7fff357e8ddad0c57e45d = L.popup({
+  "maxWidth": 240,
+});
+
+        
+            
+                var html_0861120698cf32286f89d52ffbeb86cd = $(`<div id="html_0861120698cf32286f89d52ffbeb86cd" style="width: 100.0%; height: 100.0%;"><b>Cluster 5</b> — Solapur<br>Farms in cluster: 3<br>Total recoverable biomass: 167.2 tons<br>Avg. NDVI trend: -6.63%</div>`)[0];
+                popup_869651c21ce7fff357e8ddad0c57e45d.setContent(html_0861120698cf32286f89d52ffbeb86cd);
+            
+        
+
+        circle_marker_36db8cfcb1ae092eaef68abf77765400.bindPopup(popup_869651c21ce7fff357e8ddad0c57e45d)
+        ;
+
+        
+    
+    
+            var circle_marker_d1345b2bc3103f170447088d8278049f = L.circleMarker(
+                [17.74409, 75.98301],
+                {"bubblingMouseEvents": true, "color": "#e07a00", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#ffb703", "fillOpacity": 0.35, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 23.240083159903442, "stroke": true, "weight": 2}
+            ).addTo(feature_group_60e0bbd8a3adc68a9b261edebb1a20ae);
+        
+    
+        var popup_9c2fd99fe1a5ed817c2d73737937b86e = L.popup({
+  "maxWidth": 240,
+});
+
+        
+            
+                var html_29d8a784e1d4c9cf7481107f5349e3b2 = $(`<div id="html_29d8a784e1d4c9cf7481107f5349e3b2" style="width: 100.0%; height: 100.0%;"><b>Cluster 6</b> — Solapur<br>Farms in cluster: 2<br>Total recoverable biomass: 257.1 tons<br>Avg. NDVI trend: -5.81%</div>`)[0];
+                popup_9c2fd99fe1a5ed817c2d73737937b86e.setContent(html_29d8a784e1d4c9cf7481107f5349e3b2);
+            
+        
+
+        circle_marker_d1345b2bc3103f170447088d8278049f.bindPopup(popup_9c2fd99fe1a5ed817c2d73737937b86e)
+        ;
+
+        
+    
+    
+            var circle_marker_fd431fe855cbaf8118e2dd9a7355337a = L.circleMarker(
+                [19.02994, 74.86848],
+                {"bubblingMouseEvents": true, "color": "#e07a00", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#ffb703", "fillOpacity": 0.35, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 21.041267558488716, "stroke": true, "weight": 2}
+            ).addTo(feature_group_60e0bbd8a3adc68a9b261edebb1a20ae);
+        
+    
+        var popup_23b988efa876ee8480d96fe98afc4ccf = L.popup({
+  "maxWidth": 240,
+});
+
+        
+            
+                var html_af44799b95fb1c3b1f7c89707a73a697 = $(`<div id="html_af44799b95fb1c3b1f7c89707a73a697" style="width: 100.0%; height: 100.0%;"><b>Cluster 7</b> — Ahmednagar<br>Farms in cluster: 2<br>Total recoverable biomass: 201.7 tons<br>Avg. NDVI trend: -6.13%</div>`)[0];
+                popup_23b988efa876ee8480d96fe98afc4ccf.setContent(html_af44799b95fb1c3b1f7c89707a73a697);
+            
+        
+
+        circle_marker_fd431fe855cbaf8118e2dd9a7355337a.bindPopup(popup_23b988efa876ee8480d96fe98afc4ccf)
+        ;
+
+        
+    
+    
+            var circle_marker_d64e2646fe0e26e349166ca97c3d1ad3 = L.circleMarker(
+                [16.71183, 74.62411],
+                {"bubblingMouseEvents": true, "color": "#e07a00", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#ffb703", "fillOpacity": 0.35, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 13.953491849597304, "stroke": true, "weight": 2}
+            ).addTo(feature_group_60e0bbd8a3adc68a9b261edebb1a20ae);
+        
+    
+        var popup_0c992c33c26b01a0bfe3ac262e79cc1b = L.popup({
+  "maxWidth": 240,
+});
+
+        
+            
+                var html_e62acaccc80b0ce86be5528e4103336a = $(`<div id="html_e62acaccc80b0ce86be5528e4103336a" style="width: 100.0%; height: 100.0%;"><b>Cluster 8</b> — Sangli<br>Farms in cluster: 1<br>Total recoverable biomass: 68.8 tons<br>Avg. NDVI trend: -4.92%</div>`)[0];
+                popup_0c992c33c26b01a0bfe3ac262e79cc1b.setContent(html_e62acaccc80b0ce86be5528e4103336a);
+            
+        
+
+        circle_marker_d64e2646fe0e26e349166ca97c3d1ad3.bindPopup(popup_0c992c33c26b01a0bfe3ac262e79cc1b)
+        ;
+
+        
+    
+    
+            var circle_marker_53196549de6a693639818004cac4e730 = L.circleMarker(
+                [18.46471, 73.75519],
+                {"bubblingMouseEvents": true, "color": "#e07a00", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#ffb703", "fillOpacity": 0.35, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 13.705915721867772, "stroke": true, "weight": 2}
+            ).addTo(feature_group_60e0bbd8a3adc68a9b261edebb1a20ae);
+        
+    
+        var popup_3105bb9f1a88398ffe77cf095528ca75 = L.popup({
+  "maxWidth": 240,
+});
+
+        
+            
+                var html_4dd297d983568ce0e0c5aaeacbe3a5e4 = $(`<div id="html_4dd297d983568ce0e0c5aaeacbe3a5e4" style="width: 100.0%; height: 100.0%;"><b>Cluster 9</b> — Pune<br>Farms in cluster: 1<br>Total recoverable biomass: 65.4 tons<br>Avg. NDVI trend: -5.79%</div>`)[0];
+                popup_3105bb9f1a88398ffe77cf095528ca75.setContent(html_4dd297d983568ce0e0c5aaeacbe3a5e4);
+            
+        
+
+        circle_marker_53196549de6a693639818004cac4e730.bindPopup(popup_3105bb9f1a88398ffe77cf095528ca75)
+        ;
+
+        
+    
+    
+            var circle_marker_e35f18ed599fa61ce0639b475394b1fa = L.circleMarker(
+                [17.66247, 76.02597],
+                {"bubblingMouseEvents": true, "color": "#e07a00", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#ffb703", "fillOpacity": 0.35, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 14.4468942753337, "stroke": true, "weight": 2}
+            ).addTo(feature_group_60e0bbd8a3adc68a9b261edebb1a20ae);
+        
+    
+        var popup_2cf01381aa23ef9f2b911316f8ff8c52 = L.popup({
+  "maxWidth": 240,
+});
+
+        
+            
+                var html_4d34a85125ff99de16844863b2199a98 = $(`<div id="html_4d34a85125ff99de16844863b2199a98" style="width: 100.0%; height: 100.0%;"><b>Cluster 10</b> — Solapur<br>Farms in cluster: 1<br>Total recoverable biomass: 75.8 tons<br>Avg. NDVI trend: -5.23%</div>`)[0];
+                popup_2cf01381aa23ef9f2b911316f8ff8c52.setContent(html_4d34a85125ff99de16844863b2199a98);
+            
+        
+
+        circle_marker_e35f18ed599fa61ce0639b475394b1fa.bindPopup(popup_2cf01381aa23ef9f2b911316f8ff8c52)
+        ;
+
+        
+    
+    
+            var circle_marker_25efc1ad6459ba41ab75045a6302abb0 = L.circleMarker(
+                [16.62979, 74.09606],
+                {"bubblingMouseEvents": true, "color": "#e07a00", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#ffb703", "fillOpacity": 0.35, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 16.532390035424207, "stroke": true, "weight": 2}
+            ).addTo(feature_group_60e0bbd8a3adc68a9b261edebb1a20ae);
+        
+    
+        var popup_a758bdaf0da4844ea2f89b0dbf50f476 = L.popup({
+  "maxWidth": 240,
+});
+
+        
+            
+                var html_43d023571c002d00f16ff7f52e43fef8 = $(`<div id="html_43d023571c002d00f16ff7f52e43fef8" style="width: 100.0%; height: 100.0%;"><b>Cluster 11</b> — Kolhapur<br>Farms in cluster: 1<br>Total recoverable biomass: 109.1 tons<br>Avg. NDVI trend: -9.63%</div>`)[0];
+                popup_a758bdaf0da4844ea2f89b0dbf50f476.setContent(html_43d023571c002d00f16ff7f52e43fef8);
+            
+        
+
+        circle_marker_25efc1ad6459ba41ab75045a6302abb0.bindPopup(popup_a758bdaf0da4844ea2f89b0dbf50f476)
+        ;
+
+        
+    
+    
+            var circle_marker_8f340c2ea54fd82e448b424fca8f885b = L.circleMarker(
+                [18.39349, 73.75494],
+                {"bubblingMouseEvents": true, "color": "#e07a00", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#ffb703", "fillOpacity": 0.35, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 17.33512654608122, "stroke": true, "weight": 2}
+            ).addTo(feature_group_60e0bbd8a3adc68a9b261edebb1a20ae);
+        
+    
+        var popup_000225de28b5147b10570a06ef984c00 = L.popup({
+  "maxWidth": 240,
+});
+
+        
+            
+                var html_b577534f81de1974829daa6517fc0799 = $(`<div id="html_b577534f81de1974829daa6517fc0799" style="width: 100.0%; height: 100.0%;"><b>Cluster 12</b> — Pune<br>Farms in cluster: 1<br>Total recoverable biomass: 123.5 tons<br>Avg. NDVI trend: -3.68%</div>`)[0];
+                popup_000225de28b5147b10570a06ef984c00.setContent(html_b577534f81de1974829daa6517fc0799);
+            
+        
+
+        circle_marker_8f340c2ea54fd82e448b424fca8f885b.bindPopup(popup_000225de28b5147b10570a06ef984c00)
+        ;
+
+        
+    
+    
+            var circle_marker_f601261d8b21b23787528bb7d4a3dcb4 = L.circleMarker(
+                [19.22371, 74.79359],
+                {"bubblingMouseEvents": true, "color": "#e07a00", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#ffb703", "fillOpacity": 0.35, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 11.70900771824753, "stroke": true, "weight": 2}
+            ).addTo(feature_group_60e0bbd8a3adc68a9b261edebb1a20ae);
+        
+    
+        var popup_87d5255e79b3f4050b4a9a9382535be0 = L.popup({
+  "maxWidth": 240,
+});
+
+        
+            
+                var html_2a96296de52d8e5c883bf52fb3881652 = $(`<div id="html_2a96296de52d8e5c883bf52fb3881652" style="width: 100.0%; height: 100.0%;"><b>Cluster 13</b> — Ahmednagar<br>Farms in cluster: 1<br>Total recoverable biomass: 41.3 tons<br>Avg. NDVI trend: -4.73%</div>`)[0];
+                popup_87d5255e79b3f4050b4a9a9382535be0.setContent(html_2a96296de52d8e5c883bf52fb3881652);
+            
+        
+
+        circle_marker_f601261d8b21b23787528bb7d4a3dcb4.bindPopup(popup_87d5255e79b3f4050b4a9a9382535be0)
+        ;
+
+        
+    
+    
+            var circle_marker_8f03a42987bc91f3b67c753e6d80ef31 = L.circleMarker(
+                [16.81644, 74.16447],
+                {"bubblingMouseEvents": true, "color": "#e07a00", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#ffb703", "fillOpacity": 0.35, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 15.528122136757574, "stroke": true, "weight": 2}
+            ).addTo(feature_group_60e0bbd8a3adc68a9b261edebb1a20ae);
+        
+    
+        var popup_26508fcdb62d6fa946e1ebaf03e00824 = L.popup({
+  "maxWidth": 240,
+});
+
+        
+            
+                var html_744473e7c54e69343612e503b6e1b70c = $(`<div id="html_744473e7c54e69343612e503b6e1b70c" style="width: 100.0%; height: 100.0%;"><b>Cluster 14</b> — Kolhapur<br>Farms in cluster: 1<br>Total recoverable biomass: 92.3 tons<br>Avg. NDVI trend: -4.63%</div>`)[0];
+                popup_26508fcdb62d6fa946e1ebaf03e00824.setContent(html_744473e7c54e69343612e503b6e1b70c);
+            
+        
+
+        circle_marker_8f03a42987bc91f3b67c753e6d80ef31.bindPopup(popup_26508fcdb62d6fa946e1ebaf03e00824)
+        ;
+
+        
+    
+    
+            var circle_marker_4ac1e3e190eb157ace4e4bb4da92bdb5 = L.circleMarker(
+                [17.56587, 75.98035],
+                {"bubblingMouseEvents": true, "color": "#e07a00", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#ffb703", "fillOpacity": 0.35, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 13.918709593490476, "stroke": true, "weight": 2}
+            ).addTo(feature_group_60e0bbd8a3adc68a9b261edebb1a20ae);
+        
+    
+        var popup_eeaec378a0af0e6241db6bdded63f8c1 = L.popup({
+  "maxWidth": 240,
+});
+
+        
+            
+                var html_6f83c59fa9be769a4b5862737541e3e4 = $(`<div id="html_6f83c59fa9be769a4b5862737541e3e4" style="width: 100.0%; height: 100.0%;"><b>Cluster 15</b> — Solapur<br>Farms in cluster: 1<br>Total recoverable biomass: 68.3 tons<br>Avg. NDVI trend: -8.33%</div>`)[0];
+                popup_eeaec378a0af0e6241db6bdded63f8c1.setContent(html_6f83c59fa9be769a4b5862737541e3e4);
+            
+        
+
+        circle_marker_4ac1e3e190eb157ace4e4bb4da92bdb5.bindPopup(popup_eeaec378a0af0e6241db6bdded63f8c1)
+        ;
+
+        
+    
+    
+            var circle_marker_572f00048c1faa972d421a780b91723c = L.circleMarker(
+                [18.61263, 73.90398],
+                {"bubblingMouseEvents": true, "color": "#e07a00", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#ffb703", "fillOpacity": 0.35, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 13.441948951355329, "stroke": true, "weight": 2}
+            ).addTo(feature_group_60e0bbd8a3adc68a9b261edebb1a20ae);
+        
+    
+        var popup_18bda0f380a71126c4b9d06e7bbec663 = L.popup({
+  "maxWidth": 240,
+});
+
+        
+            
+                var html_ff1216caac4386478294e8a4686f9a64 = $(`<div id="html_ff1216caac4386478294e8a4686f9a64" style="width: 100.0%; height: 100.0%;"><b>Cluster 16</b> — Pune<br>Farms in cluster: 1<br>Total recoverable biomass: 61.9 tons<br>Avg. NDVI trend: -11.06%</div>`)[0];
+                popup_18bda0f380a71126c4b9d06e7bbec663.setContent(html_ff1216caac4386478294e8a4686f9a64);
+            
+        
+
+        circle_marker_572f00048c1faa972d421a780b91723c.bindPopup(popup_18bda0f380a71126c4b9d06e7bbec663)
+        ;
+
+        
+    
+    
+            var circle_marker_a4dcff16937d56cab520cbe01ea8934e = L.circleMarker(
+                [16.73542, 74.54181],
+                {"bubblingMouseEvents": true, "color": "#e07a00", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#ffb703", "fillOpacity": 0.35, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 9.791165685766554, "stroke": true, "weight": 2}
+            ).addTo(feature_group_60e0bbd8a3adc68a9b261edebb1a20ae);
+        
+    
+        var popup_1fe7fb62662eef8e8a3fda1b396ffc6b = L.popup({
+  "maxWidth": 240,
+});
+
+        
+            
+                var html_30d324f8b8013719451587282e12ae18 = $(`<div id="html_30d324f8b8013719451587282e12ae18" style="width: 100.0%; height: 100.0%;"><b>Cluster 17</b> — Sangli<br>Farms in cluster: 1<br>Total recoverable biomass: 23.3 tons<br>Avg. NDVI trend: -4.8%</div>`)[0];
+                popup_1fe7fb62662eef8e8a3fda1b396ffc6b.setContent(html_30d324f8b8013719451587282e12ae18);
+            
+        
+
+        circle_marker_a4dcff16937d56cab520cbe01ea8934e.bindPopup(popup_1fe7fb62662eef8e8a3fda1b396ffc6b)
+        ;
+
+        
+    
+    
+            var circle_marker_c260b20fdf8842f8602de199fb3a8953 = L.circleMarker(
+                [17.57828, 75.83596],
+                {"bubblingMouseEvents": true, "color": "#e07a00", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#ffb703", "fillOpacity": 0.35, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 15.793625396798053, "stroke": true, "weight": 2}
+            ).addTo(feature_group_60e0bbd8a3adc68a9b261edebb1a20ae);
+        
+    
+        var popup_8140ca973d5a003f6904adf04c091653 = L.popup({
+  "maxWidth": 240,
+});
+
+        
+            
+                var html_3cf79792d21a059134db9b5148c0cfc1 = $(`<div id="html_3cf79792d21a059134db9b5148c0cfc1" style="width: 100.0%; height: 100.0%;"><b>Cluster 18</b> — Solapur<br>Farms in cluster: 1<br>Total recoverable biomass: 96.6 tons<br>Avg. NDVI trend: -8.2%</div>`)[0];
+                popup_8140ca973d5a003f6904adf04c091653.setContent(html_3cf79792d21a059134db9b5148c0cfc1);
+            
+        
+
+        circle_marker_c260b20fdf8842f8602de199fb3a8953.bindPopup(popup_8140ca973d5a003f6904adf04c091653)
+        ;
+
+        
+    
+    
+            var circle_marker_d411da97c55c652c702da902ce5c90c6 = L.circleMarker(
+                [17.81337, 73.92687],
+                {"bubblingMouseEvents": true, "color": "#e07a00", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#ffb703", "fillOpacity": 0.35, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 13.752538131173853, "stroke": true, "weight": 2}
+            ).addTo(feature_group_60e0bbd8a3adc68a9b261edebb1a20ae);
+        
+    
+        var popup_de846e51e6ae42eecb21f6486606b2b1 = L.popup({
+  "maxWidth": 240,
+});
+
+        
+            
+                var html_65df1a8f2db06794233adc7f537ba239 = $(`<div id="html_65df1a8f2db06794233adc7f537ba239" style="width: 100.0%; height: 100.0%;"><b>Cluster 19</b> — Satara<br>Farms in cluster: 1<br>Total recoverable biomass: 66.0 tons<br>Avg. NDVI trend: -6.68%</div>`)[0];
+                popup_de846e51e6ae42eecb21f6486606b2b1.setContent(html_65df1a8f2db06794233adc7f537ba239);
+            
+        
+
+        circle_marker_d411da97c55c652c702da902ce5c90c6.bindPopup(popup_de846e51e6ae42eecb21f6486606b2b1)
+        ;
+
+        
+    
+    
+            var circle_marker_c82ffb20eb1497e103f06ee789e8679e = L.circleMarker(
+                [16.85804, 74.51573],
+                {"bubblingMouseEvents": true, "color": "#e07a00", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#ffb703", "fillOpacity": 0.35, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 13.658322835772264, "stroke": true, "weight": 2}
+            ).addTo(feature_group_60e0bbd8a3adc68a9b261edebb1a20ae);
+        
+    
+        var popup_b9fadb8c89188fb2bb641df8607ecdbb = L.popup({
+  "maxWidth": 240,
+});
+
+        
+            
+                var html_69bcc35259c7752ff6b4e0a1e8039611 = $(`<div id="html_69bcc35259c7752ff6b4e0a1e8039611" style="width: 100.0%; height: 100.0%;"><b>Cluster 20</b> — Sangli<br>Farms in cluster: 1<br>Total recoverable biomass: 64.8 tons<br>Avg. NDVI trend: -4.84%</div>`)[0];
+                popup_b9fadb8c89188fb2bb641df8607ecdbb.setContent(html_69bcc35259c7752ff6b4e0a1e8039611);
+            
+        
+
+        circle_marker_c82ffb20eb1497e103f06ee789e8679e.bindPopup(popup_b9fadb8c89188fb2bb641df8607ecdbb)
+        ;
+
+        
+    
+    
+            var circle_marker_c9afecbfe1d03fb54f9f45bf1b4fdea4 = L.circleMarker(
+                [17.62076, 73.97935],
+                {"bubblingMouseEvents": true, "color": "#e07a00", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#ffb703", "fillOpacity": 0.35, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 16.731881243555485, "stroke": true, "weight": 2}
+            ).addTo(feature_group_60e0bbd8a3adc68a9b261edebb1a20ae);
+        
+    
+        var popup_24f7032a372e95c884bf255b72ceb10f = L.popup({
+  "maxWidth": 240,
+});
+
+        
+            
+                var html_e320d7e3125a8cbf7119471279025a66 = $(`<div id="html_e320d7e3125a8cbf7119471279025a66" style="width: 100.0%; height: 100.0%;"><b>Cluster 21</b> — Satara<br>Farms in cluster: 1<br>Total recoverable biomass: 112.6 tons<br>Avg. NDVI trend: -6.48%</div>`)[0];
+                popup_24f7032a372e95c884bf255b72ceb10f.setContent(html_e320d7e3125a8cbf7119471279025a66);
+            
+        
+
+        circle_marker_c9afecbfe1d03fb54f9f45bf1b4fdea4.bindPopup(popup_24f7032a372e95c884bf255b72ceb10f)
+        ;
+
+        
+    
+    
+            var circle_marker_38801204f4a6930f14a5f033a9c71781 = L.circleMarker(
+                [16.78785, 74.43614],
+                {"bubblingMouseEvents": true, "color": "#e07a00", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#ffb703", "fillOpacity": 0.35, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 7.179433911878025, "stroke": true, "weight": 2}
+            ).addTo(feature_group_60e0bbd8a3adc68a9b261edebb1a20ae);
+        
+    
+        var popup_801fc6f194f544caa4e55979e6bc94be = L.popup({
+  "maxWidth": 240,
+});
+
+        
+            
+                var html_19c4a414cb32a07dd75693d589baad9c = $(`<div id="html_19c4a414cb32a07dd75693d589baad9c" style="width: 100.0%; height: 100.0%;"><b>Cluster 22</b> — Sangli<br>Farms in cluster: 1<br>Total recoverable biomass: 7.0 tons<br>Avg. NDVI trend: -3.42%</div>`)[0];
+                popup_801fc6f194f544caa4e55979e6bc94be.setContent(html_19c4a414cb32a07dd75693d589baad9c);
+            
+        
+
+        circle_marker_38801204f4a6930f14a5f033a9c71781.bindPopup(popup_801fc6f194f544caa4e55979e6bc94be)
+        ;
+
+        
+    
+    
+            var circle_marker_ec4688b0d9b49d08dc74f4eded42dc76 = L.circleMarker(
+                [17.52534, 76.04549],
+                {"bubblingMouseEvents": true, "color": "#e07a00", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#ffb703", "fillOpacity": 0.35, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 14.787993325915622, "stroke": true, "weight": 2}
+            ).addTo(feature_group_60e0bbd8a3adc68a9b261edebb1a20ae);
+        
+    
+        var popup_b818e08f6d44748debe1d31146528d5b = L.popup({
+  "maxWidth": 240,
+});
+
+        
+            
+                var html_5562205528ee87da18600b984cf9f6c0 = $(`<div id="html_5562205528ee87da18600b984cf9f6c0" style="width: 100.0%; height: 100.0%;"><b>Cluster 23</b> — Solapur<br>Farms in cluster: 1<br>Total recoverable biomass: 80.8 tons<br>Avg. NDVI trend: -4.78%</div>`)[0];
+                popup_b818e08f6d44748debe1d31146528d5b.setContent(html_5562205528ee87da18600b984cf9f6c0);
+            
+        
+
+        circle_marker_ec4688b0d9b49d08dc74f4eded42dc76.bindPopup(popup_b818e08f6d44748debe1d31146528d5b)
+        ;
+
+        
+    
+    
+            var circle_marker_0972f572bc0d4ed3b67026171c362837 = L.circleMarker(
+                [16.89209, 74.72852],
+                {"bubblingMouseEvents": true, "color": "#e07a00", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#ffb703", "fillOpacity": 0.35, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 15.458586300237915, "stroke": true, "weight": 2}
+            ).addTo(feature_group_60e0bbd8a3adc68a9b261edebb1a20ae);
+        
+    
+        var popup_af1b28838bf58324609f1257adc009a0 = L.popup({
+  "maxWidth": 240,
+});
+
+        
+            
+                var html_5c289405d310ad6975089e7507281f29 = $(`<div id="html_5c289405d310ad6975089e7507281f29" style="width: 100.0%; height: 100.0%;"><b>Cluster 24</b> — Sangli<br>Farms in cluster: 1<br>Total recoverable biomass: 91.2 tons<br>Avg. NDVI trend: -8.24%</div>`)[0];
+                popup_af1b28838bf58324609f1257adc009a0.setContent(html_5c289405d310ad6975089e7507281f29);
+            
+        
+
+        circle_marker_0972f572bc0d4ed3b67026171c362837.bindPopup(popup_af1b28838bf58324609f1257adc009a0)
+        ;
+
+        
+    
+    
+            var circle_marker_87b003866a22730203a7394d5cbf8b24 = L.circleMarker(
+                [19.00076, 74.80875],
+                {"bubblingMouseEvents": true, "color": "#e07a00", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#ffb703", "fillOpacity": 0.35, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 7.914281543272022, "stroke": true, "weight": 2}
+            ).addTo(feature_group_60e0bbd8a3adc68a9b261edebb1a20ae);
+        
+    
+        var popup_d1b70fc4f62dc16b83ab79f1621cffba = L.popup({
+  "maxWidth": 240,
+});
+
+        
+            
+                var html_c2350e2d94809e7af37d9b2ec189b5df = $(`<div id="html_c2350e2d94809e7af37d9b2ec189b5df" style="width: 100.0%; height: 100.0%;"><b>Cluster 25</b> — Ahmednagar<br>Farms in cluster: 1<br>Total recoverable biomass: 10.6 tons<br>Avg. NDVI trend: -9.96%</div>`)[0];
+                popup_d1b70fc4f62dc16b83ab79f1621cffba.setContent(html_c2350e2d94809e7af37d9b2ec189b5df);
+            
+        
+
+        circle_marker_87b003866a22730203a7394d5cbf8b24.bindPopup(popup_d1b70fc4f62dc16b83ab79f1621cffba)
+        ;
+
+        
+    
+    
+            var circle_marker_8b5126c1e96b4a2e573cabd6c472662e = L.circleMarker(
+                [18.56395, 73.8601],
+                {"bubblingMouseEvents": true, "color": "#e07a00", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#ffb703", "fillOpacity": 0.35, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 15.533117531699743, "stroke": true, "weight": 2}
+            ).addTo(feature_group_60e0bbd8a3adc68a9b261edebb1a20ae);
+        
+    
+        var popup_2e79212992985b942e3d0e14a3f1261a = L.popup({
+  "maxWidth": 240,
+});
+
+        
+            
+                var html_1ccb158701019b4994a05ce7a4fc1a7e = $(`<div id="html_1ccb158701019b4994a05ce7a4fc1a7e" style="width: 100.0%; height: 100.0%;"><b>Cluster 26</b> — Pune<br>Farms in cluster: 1<br>Total recoverable biomass: 92.4 tons<br>Avg. NDVI trend: -9.37%</div>`)[0];
+                popup_2e79212992985b942e3d0e14a3f1261a.setContent(html_1ccb158701019b4994a05ce7a4fc1a7e);
+            
+        
+
+        circle_marker_8b5126c1e96b4a2e573cabd6c472662e.bindPopup(popup_2e79212992985b942e3d0e14a3f1261a)
+        ;
+
+        
+    
+    
+            var circle_marker_ca213243c30070b22883b86e9b2558e3 = L.circleMarker(
+                [18.42271, 73.85715],
+                {"bubblingMouseEvents": true, "color": "#e07a00", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#ffb703", "fillOpacity": 0.35, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 9.214134635776102, "stroke": true, "weight": 2}
+            ).addTo(feature_group_60e0bbd8a3adc68a9b261edebb1a20ae);
+        
+    
+        var popup_8ba6030b1c556d57ac9396519519dbf8 = L.popup({
+  "maxWidth": 240,
+});
+
+        
+            
+                var html_0a75600c5973fce12c561be8a5e0cdf5 = $(`<div id="html_0a75600c5973fce12c561be8a5e0cdf5" style="width: 100.0%; height: 100.0%;"><b>Cluster 27</b> — Pune<br>Farms in cluster: 1<br>Total recoverable biomass: 18.9 tons<br>Avg. NDVI trend: -5.57%</div>`)[0];
+                popup_8ba6030b1c556d57ac9396519519dbf8.setContent(html_0a75600c5973fce12c561be8a5e0cdf5);
+            
+        
+
+        circle_marker_ca213243c30070b22883b86e9b2558e3.bindPopup(popup_8ba6030b1c556d57ac9396519519dbf8)
+        ;
+
+        
+    
+    
+            var circle_marker_902baa2ff40c6fe478a82b571c76255e = L.circleMarker(
+                [18.40444, 73.8081],
+                {"bubblingMouseEvents": true, "color": "#e07a00", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#ffb703", "fillOpacity": 0.35, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 13.872142624577505, "stroke": true, "weight": 2}
+            ).addTo(feature_group_60e0bbd8a3adc68a9b261edebb1a20ae);
+        
+    
+        var popup_f19129286294cc7421233a0dc6e1167c = L.popup({
+  "maxWidth": 240,
+});
+
+        
+            
+                var html_2244dd12237f52a23e54d580b974410d = $(`<div id="html_2244dd12237f52a23e54d580b974410d" style="width: 100.0%; height: 100.0%;"><b>Cluster 28</b> — Pune<br>Farms in cluster: 1<br>Total recoverable biomass: 67.7 tons<br>Avg. NDVI trend: -9.33%</div>`)[0];
+                popup_f19129286294cc7421233a0dc6e1167c.setContent(html_2244dd12237f52a23e54d580b974410d);
+            
+        
+
+        circle_marker_902baa2ff40c6fe478a82b571c76255e.bindPopup(popup_f19129286294cc7421233a0dc6e1167c)
+        ;
+
+        
+    
+    
+            var circle_marker_efc4bd8a249b49c1bca953600f0b2e54 = L.circleMarker(
+                [16.97981, 74.54417],
+                {"bubblingMouseEvents": true, "color": "#e07a00", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#ffb703", "fillOpacity": 0.35, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 17.45445651076252, "stroke": true, "weight": 2}
+            ).addTo(feature_group_60e0bbd8a3adc68a9b261edebb1a20ae);
+        
+    
+        var popup_562c5ea9f05884156f7386d78e1c82d5 = L.popup({
+  "maxWidth": 240,
+});
+
+        
+            
+                var html_c09ec28c4e4ab8a50c8449a458212b32 = $(`<div id="html_c09ec28c4e4ab8a50c8449a458212b32" style="width: 100.0%; height: 100.0%;"><b>Cluster 29</b> — Sangli<br>Farms in cluster: 1<br>Total recoverable biomass: 125.7 tons<br>Avg. NDVI trend: -9.37%</div>`)[0];
+                popup_562c5ea9f05884156f7386d78e1c82d5.setContent(html_c09ec28c4e4ab8a50c8449a458212b32);
+            
+        
+
+        circle_marker_efc4bd8a249b49c1bca953600f0b2e54.bindPopup(popup_562c5ea9f05884156f7386d78e1c82d5)
+        ;
+
+        
+    
+    
+            var circle_marker_381cb11450aa2f440ac97daa7495157b = L.circleMarker(
+                [16.77978, 74.60498],
+                {"bubblingMouseEvents": true, "color": "#e07a00", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#ffb703", "fillOpacity": 0.35, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 10.397249408925683, "stroke": true, "weight": 2}
+            ).addTo(feature_group_60e0bbd8a3adc68a9b261edebb1a20ae);
+        
+    
+        var popup_20fb5c754b1541306f5ff5528433d47b = L.popup({
+  "maxWidth": 240,
+});
+
+        
+            
+                var html_993b17ed06482c1220312bec5dd453fe = $(`<div id="html_993b17ed06482c1220312bec5dd453fe" style="width: 100.0%; height: 100.0%;"><b>Cluster 30</b> — Sangli<br>Farms in cluster: 1<br>Total recoverable biomass: 28.4 tons<br>Avg. NDVI trend: -4.76%</div>`)[0];
+                popup_20fb5c754b1541306f5ff5528433d47b.setContent(html_993b17ed06482c1220312bec5dd453fe);
+            
+        
+
+        circle_marker_381cb11450aa2f440ac97daa7495157b.bindPopup(popup_20fb5c754b1541306f5ff5528433d47b)
+        ;
+
+        
+    
+    
+            var circle_marker_276867339de87eaadd49d65bd1305a42 = L.circleMarker(
+                [16.9004, 74.44228],
+                {"bubblingMouseEvents": true, "color": "#e07a00", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#ffb703", "fillOpacity": 0.35, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 14.540208726586016, "stroke": true, "weight": 2}
+            ).addTo(feature_group_60e0bbd8a3adc68a9b261edebb1a20ae);
+        
+    
+        var popup_8a800dd8fe70bd645c869848db87919a = L.popup({
+  "maxWidth": 240,
+});
+
+        
+            
+                var html_b8eeaf5b0adf4b4a262b65390cb80073 = $(`<div id="html_b8eeaf5b0adf4b4a262b65390cb80073" style="width: 100.0%; height: 100.0%;"><b>Cluster 31</b> — Sangli<br>Farms in cluster: 1<br>Total recoverable biomass: 77.2 tons<br>Avg. NDVI trend: -6.34%</div>`)[0];
+                popup_8a800dd8fe70bd645c869848db87919a.setContent(html_b8eeaf5b0adf4b4a262b65390cb80073);
+            
+        
+
+        circle_marker_276867339de87eaadd49d65bd1305a42.bindPopup(popup_8a800dd8fe70bd645c869848db87919a)
+        ;
+
+        
+    
+    
+            var circle_marker_dba52410a99fa7249a7a09e12e094ab8 = L.circleMarker(
+                [19.1037, 74.68396],
+                {"bubblingMouseEvents": true, "color": "#e07a00", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#ffb703", "fillOpacity": 0.35, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 13.207996524760421, "stroke": true, "weight": 2}
+            ).addTo(feature_group_60e0bbd8a3adc68a9b261edebb1a20ae);
+        
+    
+        var popup_b93d9fe38dd4a4d42bbacf5d2891557e = L.popup({
+  "maxWidth": 240,
+});
+
+        
+            
+                var html_08fe748d71f09c868f0f5c8f84de73ba = $(`<div id="html_08fe748d71f09c868f0f5c8f84de73ba" style="width: 100.0%; height: 100.0%;"><b>Cluster 32</b> — Ahmednagar<br>Farms in cluster: 1<br>Total recoverable biomass: 58.9 tons<br>Avg. NDVI trend: -9.26%</div>`)[0];
+                popup_b93d9fe38dd4a4d42bbacf5d2891557e.setContent(html_08fe748d71f09c868f0f5c8f84de73ba);
+            
+        
+
+        circle_marker_dba52410a99fa7249a7a09e12e094ab8.bindPopup(popup_b93d9fe38dd4a4d42bbacf5d2891557e)
+        ;
+
+        
+    
+    
+            var circle_marker_4d7fcba7c531ef8e34292c167ac81ec8 = L.circleMarker(
+                [19.21493, 74.84478],
+                {"bubblingMouseEvents": true, "color": "#e07a00", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#ffb703", "fillOpacity": 0.35, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 12.027452896155792, "stroke": true, "weight": 2}
+            ).addTo(feature_group_60e0bbd8a3adc68a9b261edebb1a20ae);
+        
+    
+        var popup_a143144213dfba6fcb1ea6439e2cf4af = L.popup({
+  "maxWidth": 240,
+});
+
+        
+            
+                var html_e7e67c5f85b6961673f32c35f3c308e5 = $(`<div id="html_e7e67c5f85b6961673f32c35f3c308e5" style="width: 100.0%; height: 100.0%;"><b>Cluster 33</b> — Ahmednagar<br>Farms in cluster: 1<br>Total recoverable biomass: 44.8 tons<br>Avg. NDVI trend: -3.25%</div>`)[0];
+                popup_a143144213dfba6fcb1ea6439e2cf4af.setContent(html_e7e67c5f85b6961673f32c35f3c308e5);
+            
+        
+
+        circle_marker_4d7fcba7c531ef8e34292c167ac81ec8.bindPopup(popup_a143144213dfba6fcb1ea6439e2cf4af)
+        ;
+
+        
+    
+    
+            var circle_marker_69563e255a7f810d8af03c903174420b = L.circleMarker(
+                [17.69983, 75.86446],
+                {"bubblingMouseEvents": true, "color": "#e07a00", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#ffb703", "fillOpacity": 0.35, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 9.980769181301014, "stroke": true, "weight": 2}
+            ).addTo(feature_group_60e0bbd8a3adc68a9b261edebb1a20ae);
+        
+    
+        var popup_33e2b2a6b93a1547d8872aeeae3fbc79 = L.popup({
+  "maxWidth": 240,
+});
+
+        
+            
+                var html_802a21ae5174f7b206a78a7962ec957d = $(`<div id="html_802a21ae5174f7b206a78a7962ec957d" style="width: 100.0%; height: 100.0%;"><b>Cluster 34</b> — Solapur<br>Farms in cluster: 1<br>Total recoverable biomass: 24.8 tons<br>Avg. NDVI trend: -6.82%</div>`)[0];
+                popup_33e2b2a6b93a1547d8872aeeae3fbc79.setContent(html_802a21ae5174f7b206a78a7962ec957d);
+            
+        
+
+        circle_marker_69563e255a7f810d8af03c903174420b.bindPopup(popup_33e2b2a6b93a1547d8872aeeae3fbc79)
+        ;
+
+        
+    
+    
+            var circle_marker_df17afe3eecc100e93f46290567eceff = L.circleMarker(
+                [19.04651, 74.63612],
+                {"bubblingMouseEvents": true, "color": "#e07a00", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#ffb703", "fillOpacity": 0.35, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 16.92996519716894, "stroke": true, "weight": 2}
+            ).addTo(feature_group_60e0bbd8a3adc68a9b261edebb1a20ae);
+        
+    
+        var popup_d804cfc293cc318bd2f557f0d2f7ecf9 = L.popup({
+  "maxWidth": 240,
+});
+
+        
+            
+                var html_d7cb98ce22c60cdeda7a0c02b6684326 = $(`<div id="html_d7cb98ce22c60cdeda7a0c02b6684326" style="width: 100.0%; height: 100.0%;"><b>Cluster 35</b> — Ahmednagar<br>Farms in cluster: 1<br>Total recoverable biomass: 116.1 tons<br>Avg. NDVI trend: -11.42%</div>`)[0];
+                popup_d804cfc293cc318bd2f557f0d2f7ecf9.setContent(html_d7cb98ce22c60cdeda7a0c02b6684326);
+            
+        
+
+        circle_marker_df17afe3eecc100e93f46290567eceff.bindPopup(popup_d804cfc293cc318bd2f557f0d2f7ecf9)
+        ;
+
+        
+    
+    
+            var circle_marker_f7122e3bc8d6c4cb9389af93c43427fd = L.circleMarker(
+                [17.61466, 75.91307],
+                {"bubblingMouseEvents": true, "color": "#e07a00", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#ffb703", "fillOpacity": 0.35, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 13.762130914918115, "stroke": true, "weight": 2}
+            ).addTo(feature_group_60e0bbd8a3adc68a9b261edebb1a20ae);
+        
+    
+        var popup_16b88afab8462180b05500e15dd125d8 = L.popup({
+  "maxWidth": 240,
+});
+
+        
+            
+                var html_0886d98d28af25bb8b66ef4abfa669cb = $(`<div id="html_0886d98d28af25bb8b66ef4abfa669cb" style="width: 100.0%; height: 100.0%;"><b>Cluster 36</b> — Solapur<br>Farms in cluster: 1<br>Total recoverable biomass: 66.2 tons<br>Avg. NDVI trend: -6.86%</div>`)[0];
+                popup_16b88afab8462180b05500e15dd125d8.setContent(html_0886d98d28af25bb8b66ef4abfa669cb);
+            
+        
+
+        circle_marker_f7122e3bc8d6c4cb9389af93c43427fd.bindPopup(popup_16b88afab8462180b05500e15dd125d8)
+        ;
+
+        
+    
+    
+            var circle_marker_40ba3940f2a756cacf3600cb27a5a62c = L.circleMarker(
+                [16.82113, 74.28017],
+                {"bubblingMouseEvents": true, "color": "#e07a00", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#ffb703", "fillOpacity": 0.35, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 17.059617145996278, "stroke": true, "weight": 2}
+            ).addTo(feature_group_60e0bbd8a3adc68a9b261edebb1a20ae);
+        
+    
+        var popup_72466146c0f92ef6e65b1c2af1c7d8df = L.popup({
+  "maxWidth": 240,
+});
+
+        
+            
+                var html_774e6e05901bd96ba199be0b14959f67 = $(`<div id="html_774e6e05901bd96ba199be0b14959f67" style="width: 100.0%; height: 100.0%;"><b>Cluster 37</b> — Kolhapur<br>Farms in cluster: 1<br>Total recoverable biomass: 118.4 tons<br>Avg. NDVI trend: -2.54%</div>`)[0];
+                popup_72466146c0f92ef6e65b1c2af1c7d8df.setContent(html_774e6e05901bd96ba199be0b14959f67);
+            
+        
+
+        circle_marker_40ba3940f2a756cacf3600cb27a5a62c.bindPopup(popup_72466146c0f92ef6e65b1c2af1c7d8df)
+        ;
+
+        
+    
+    
+            feature_group_60e0bbd8a3adc68a9b261edebb1a20ae.addTo(map_c95fad225fd36fbeb4a2eb1ce317e370);
+        
+    
+            var layer_control_6f88c30dc948eea662e7ce140535b58b_layers = {
+                base_layers : {
+                    "cartodbpositron" : tile_layer_94f33f7d5dfd95f4ef3b0794ad736f69,
+                },
+                overlays :  {
+                    "District Crush Capacity" : feature_group_c8a8da1726eaa0f74f1b0f37f09fee0e,
+                    "Farms" : feature_group_5de8ec93113ea8cbf7aa1fc286d80b56,
+                    "Harvest-Ready Clusters" : feature_group_60e0bbd8a3adc68a9b261edebb1a20ae,
+                },
+            };
+            let layer_control_6f88c30dc948eea662e7ce140535b58b = L.control.layers(
+                layer_control_6f88c30dc948eea662e7ce140535b58b_layers.base_layers,
+                layer_control_6f88c30dc948eea662e7ce140535b58b_layers.overlays,
+                {
+  "position": "topright",
+  "collapsed": false,
+  "autoZIndex": true,
+}
+            ).addTo(map_c95fad225fd36fbeb4a2eb1ce317e370);
+
+        
+</script>
+</html>

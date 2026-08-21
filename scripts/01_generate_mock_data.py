@@ -4,6 +4,8 @@ Run: python 01_generate_mock_data.py
 """
 import numpy as np
 import pandas as pd
+from assumptions import BAGASSE_YIELD_RANGE, LEAVES_YIELD_RANGE, PRESS_MUD_YIELD_RANGE
+
 
 np.random.seed(42)
 N = 100
@@ -29,9 +31,9 @@ for col in ["rainfall_mm", "soil_type", "fertilizer_kg_per_acre"]:
 
 # --- Target variables (tons), loosely correlated with acreage/age/fertilizer ---
 base = df["farm_acreage"] * (df["crop_age_months"] / 12)
-df["bagasse_tons"] = np.round(base * np.random.uniform(2.8, 3.6, N), 2)
-df["leaves_tons"] = np.round(base * np.random.uniform(0.9, 1.4, N), 2)
-df["press_mud_tons"] = np.round(base * np.random.uniform(0.3, 0.6, N), 2)
+df["bagasse_tons"] = np.round(base * np.random.uniform(*BAGASSE_YIELD_RANGE, N), 2)
+df["leaves_tons"] = np.round(base * np.random.uniform(*LEAVES_YIELD_RANGE, N), 2)
+df["press_mud_tons"] = np.round(base * np.random.uniform(*PRESS_MUD_YIELD_RANGE, N), 2)
 
 df.to_csv("../data/sugarcane_data.csv", index=False)
 print("Saved sugarcane_data.csv with shape:", df.shape)
