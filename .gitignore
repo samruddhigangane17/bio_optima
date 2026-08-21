@@ -1,0 +1,15 @@
+# Python environments
+venv/
+env/
+.env
+
+# Jupyter Notebook checkpoints
+.ipynb_checkpoints/
+__pycache__/
+
+# AI Models (We will ignore these later when they get big)
+*.h5
+*.pkl
+
+# Note: We are NOT ignoring *.csv right now so your team has the mock data. 
+# Later, you can add *.csv to this file when using real, massive datasets.
