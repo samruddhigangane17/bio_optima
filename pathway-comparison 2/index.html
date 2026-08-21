@@ -1,0 +1,956 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Pathway Comparison — CaneCycle</title>
+<style>
+  :root {
+    --pc-surface: #ffffff;
+    --pc-surface-sunken: #f3f6f2;
+    --pc-border: #e2e8e1;
+    --pc-text: #16261f;
+    --pc-text-muted: #5b6b62;
+    --pc-margin: #2f6f4e;
+    --pc-margin-soft: #e5f1ea;
+    --pc-emissions: #1b4b66;
+    --pc-emissions-soft: #e6eef3;
+    --pc-warn: #b3492b;
+    --pc-warn-soft: #f6e8e2;
+    --pc-neutral-soft: #eef1ee;
+    --pc-radius-lg: 16px;
+    --pc-radius-md: 10px;
+    --pc-radius-sm: 7px;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: #fafbf9;
+    font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    color: var(--pc-text);
+  }
+
+  .pc-page {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 40px 24px 80px;
+  }
+
+  .pc-note {
+    background: #fffbe6;
+    border: 1px solid #f0d878;
+    border-radius: 8px;
+    padding: 10px 14px;
+    font-size: 12.5px;
+    color: #6b5a12;
+    margin-bottom: 24px;
+  }
+
+  .pc-root {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* ---------- header ---------- */
+  .pc-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 24px;
+    flex-wrap: wrap;
+  }
+  .pc-eyebrow {
+    margin: 0 0 6px;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--pc-margin);
+  }
+  .pc-title {
+    margin: 0 0 6px;
+    font-size: 24px;
+    line-height: 1.2;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+  }
+  .pc-subtitle {
+    margin: 0;
+    max-width: 56ch;
+    font-size: 14.5px;
+    line-height: 1.5;
+    color: var(--pc-text-muted);
+  }
+
+  .pc-view-toggle {
+    display: inline-flex;
+    padding: 3px;
+    background: var(--pc-surface-sunken);
+    border: 1px solid var(--pc-border);
+    border-radius: 999px;
+    flex-shrink: 0;
+  }
+  .pc-toggle-btn {
+    appearance: none;
+    border: none;
+    background: transparent;
+    font-size: 13px;
+    font-weight: 600;
+    padding: 8px 16px;
+    border-radius: 999px;
+    color: var(--pc-text-muted);
+    cursor: pointer;
+    transition: background-color .18s ease, color .18s ease, box-shadow .18s ease;
+    white-space: nowrap;
+  }
+  .pc-toggle-btn:hover { color: var(--pc-text); }
+  .pc-toggle-btn.active.financial { background: var(--pc-margin); color: #fff; box-shadow: 0 1px 2px rgba(0,0,0,.12); }
+  .pc-toggle-btn.active.environmental { background: var(--pc-emissions); color: #fff; box-shadow: 0 1px 2px rgba(0,0,0,.12); }
+
+  /* ---------- Feature 06: objective-weight hero ---------- */
+  .pc-hero {
+    position: relative;
+    padding: 28px 28px 26px;
+    border-radius: var(--pc-radius-lg);
+    border: 1px solid var(--pc-border);
+    background: var(--pc-surface);
+    overflow: hidden;
+    isolation: isolate;
+  }
+  .pc-hero-glow {
+    position: absolute;
+    top: 50%;
+    width: 340px;
+    height: 340px;
+    border-radius: 50%;
+    filter: blur(60px);
+    transform: translateY(-50%);
+    z-index: -1;
+    transition: opacity 0.35s ease;
+    pointer-events: none;
+  }
+  .pc-hero-glow--margin {
+    left: -80px;
+    background: var(--pc-margin);
+  }
+  .pc-hero-glow--emissions {
+    right: -80px;
+    background: var(--pc-emissions);
+  }
+  .pc-hero-top {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 20px;
+    flex-wrap: wrap;
+    margin-bottom: 30px;
+  }
+  .pc-hero-top > div:first-child {
+    flex: 1 1 380px;
+    min-width: 280px;
+  }
+  .pc-hero-eyebrow-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .pc-hero-title {
+    margin: 0 0 6px;
+    font-size: 26px;
+    line-height: 1.2;
+    font-weight: 800;
+    letter-spacing: -0.01em;
+  }
+  .pc-hero-weights {
+    flex-shrink: 0;
+    font-size: 13.5px;
+    font-weight: 700;
+    padding: 8px 16px;
+    border-radius: 999px;
+    background: var(--pc-surface-sunken);
+    border: 1px solid var(--pc-border);
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+    transition: background-color 0.25s ease, border-color 0.25s ease;
+  }
+  .pc-hero-weights .pc-hw-margin { color: var(--pc-margin); }
+  .pc-hero-weights .pc-hw-sep { color: var(--pc-text-muted); margin: 0 6px; }
+  .pc-hero-weights .pc-hw-emissions { color: var(--pc-emissions); }
+
+  .pc-slider-wrap {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 26px;
+  }
+  .pc-slider-endlabel {
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.06em;
+    white-space: nowrap;
+  }
+  .pc-slider-endlabel--margin { color: var(--pc-margin); }
+  .pc-slider-endlabel--emissions { color: var(--pc-emissions); text-align: right; }
+
+  .pc-slider {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 100%;
+    height: 10px;
+    border-radius: 999px;
+    outline: none;
+    cursor: pointer;
+    background: linear-gradient(to right, var(--pc-margin) 0%, var(--pc-margin) 70%, var(--pc-emissions) 70%, var(--pc-emissions) 100%);
+    transition: box-shadow 0.15s ease;
+  }
+  .pc-slider:focus-visible {
+    box-shadow: 0 0 0 3px rgba(47, 111, 78, 0.3);
+  }
+  .pc-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    background: #fff;
+    border: 3px solid var(--pc-text);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
+    cursor: grab;
+    transition: transform 0.12s ease;
+  }
+  .pc-slider::-webkit-slider-thumb:hover { transform: scale(1.08); }
+  .pc-slider::-webkit-slider-thumb:active { cursor: grabbing; transform: scale(1.15); }
+  .pc-slider::-moz-range-thumb {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: #fff;
+    border: 3px solid var(--pc-text);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
+    cursor: grab;
+  }
+  .pc-slider::-moz-range-track {
+    height: 10px;
+    border-radius: 999px;
+    background: transparent;
+  }
+
+  .pc-hero-result {
+    display: flex;
+    align-items: stretch;
+    gap: 22px;
+    flex-wrap: wrap;
+    padding-top: 20px;
+    border-top: 1px dashed var(--pc-border);
+  }
+  .pc-hero-pick {
+    flex: 1 1 280px;
+    min-width: 240px;
+  }
+  .pc-hero-pick-badge {
+    display: inline-block;
+    font-size: 10.5px;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: #fff;
+    background: var(--pc-text);
+    padding: 4px 10px;
+    border-radius: 999px;
+    margin-bottom: 8px;
+    transition: background-color 0.25s ease;
+  }
+  .pc-hero-pick-name {
+    margin: 0 0 6px;
+    font-size: 20px;
+    font-weight: 800;
+    letter-spacing: -0.01em;
+    transition: opacity 0.2s ease;
+  }
+  .pc-hero-pick-why {
+    margin: 0;
+    font-size: 13.5px;
+    line-height: 1.55;
+    color: var(--pc-text-muted);
+    max-width: 60ch;
+    transition: opacity 0.2s ease;
+  }
+  .pc-hero-metrics {
+    display: flex;
+    gap: 14px;
+    flex-shrink: 0;
+  }
+  .pc-hero-metric {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 4px;
+    padding: 14px 20px;
+    min-width: 140px;
+    border-radius: var(--pc-radius-md);
+    background: var(--pc-surface-sunken);
+    border: 1px solid var(--pc-border);
+  }
+  .pc-hero-metric-label {
+    font-size: 10.5px;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: var(--pc-text-muted);
+  }
+  .pc-hero-metric-value {
+    font-size: 19px;
+    font-weight: 800;
+    font-variant-numeric: tabular-nums;
+    transition: color 0.25s ease;
+  }
+
+  @media (max-width: 640px) {
+    .pc-hero { padding: 22px 18px 20px; }
+    .pc-slider-wrap { grid-template-columns: 1fr; gap: 8px; }
+    .pc-slider-endlabel--emissions { text-align: left; }
+    .pc-hero-result { flex-direction: column; }
+    .pc-hero-pick { flex: none; min-width: 0; }
+    .pc-hero-metrics { width: 100%; }
+    .pc-hero-metric { flex: 1; min-width: 0; }
+  }
+
+  /* ---------- quantity row ---------- */
+  .pc-quantity-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+    padding: 12px 16px;
+    background: var(--pc-surface-sunken);
+    border: 1px solid var(--pc-border);
+    border-radius: var(--pc-radius-md);
+  }
+  .pc-quantity-label { font-size: 13.5px; font-weight: 600; color: var(--pc-text-muted); }
+  .pc-quantity-label.suffix { font-weight: 500; }
+  .pc-quantity-options { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .pc-qty-btn {
+    appearance: none;
+    border: 1px solid var(--pc-border);
+    background: var(--pc-surface);
+    color: var(--pc-text);
+    font-size: 13.5px;
+    font-weight: 600;
+    padding: 7px 14px;
+    border-radius: 999px;
+    cursor: pointer;
+    transition: border-color .15s ease, background-color .15s ease, color .15s ease;
+  }
+  .pc-qty-btn:hover { border-color: var(--pc-margin); }
+  .pc-qty-btn.active { background: var(--pc-margin); border-color: var(--pc-margin); color: #fff; }
+  .pc-qty-custom input {
+    width: 84px;
+    font-size: 13.5px;
+    font-weight: 600;
+    padding: 7px 12px;
+    border-radius: 999px;
+    border: 1px solid var(--pc-border);
+    background: var(--pc-surface);
+    color: var(--pc-text);
+    font-family: inherit;
+  }
+  .pc-qty-custom input:focus { outline: 2px solid var(--pc-margin); outline-offset: 1px; }
+  .pc-qty-custom.active input { border-color: var(--pc-margin); }
+
+  /* ---------- why recommended ---------- */
+  .pc-why-box {
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+    padding: 14px 16px;
+    background: var(--pc-margin-soft);
+    border: 1px solid rgba(47,111,78,.3);
+    border-radius: var(--pc-radius-md);
+  }
+  .pc-why-badge {
+    flex-shrink: 0;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+    color: #fff;
+    background: var(--pc-margin);
+    padding: 5px 10px;
+    border-radius: 999px;
+    margin-top: 2px;
+  }
+  .pc-why-title { margin: 0 0 2px; font-size: 14.5px; font-weight: 700; }
+  .pc-why-text { margin: 0; font-size: 13.5px; line-height: 1.5; color: var(--pc-text-muted); }
+
+  /* ---------- table ---------- */
+  .pc-table-scroll {
+    overflow-x: auto;
+    border: 1px solid var(--pc-border);
+    border-radius: var(--pc-radius-lg);
+    background: var(--pc-surface);
+    -webkit-overflow-scrolling: touch;
+  }
+  .pc-table {
+    width: 100%;
+    min-width: 880px;
+    border-collapse: separate;
+    border-spacing: 0;
+    font-size: 13.5px;
+  }
+  .pc-table thead th {
+    position: sticky;
+    top: 0;
+    background: var(--pc-surface-sunken);
+    color: var(--pc-text-muted);
+    font-size: 11.5px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    text-align: left;
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--pc-border);
+    white-space: nowrap;
+    z-index: 2;
+  }
+  .pc-table td, .pc-table th[scope="row"] {
+    padding: 14px 16px;
+    border-bottom: 1px solid var(--pc-border);
+    white-space: nowrap;
+    vertical-align: middle;
+  }
+  .pc-table tbody tr:last-child td, .pc-table tbody tr:last-child th { border-bottom: none; }
+  .pc-col-sticky { position: sticky; left: 0; background: inherit; z-index: 1; box-shadow: 1px 0 0 var(--pc-border); }
+  thead .pc-col-sticky { z-index: 3; background: var(--pc-surface-sunken); }
+  .pc-col-emphasis { background: var(--pc-surface-sunken); }
+  .pc-row { background: var(--pc-surface); transition: background-color .15s ease; }
+  .pc-row:hover { background: var(--pc-surface-sunken); }
+  .pc-row:hover .pc-col-sticky, .pc-row:hover .pc-col-emphasis { background: var(--pc-surface-sunken); }
+  .pc-row.recommended { background: var(--pc-margin-soft); }
+  .pc-row.recommended .pc-col-sticky { background: var(--pc-margin-soft); }
+  .pc-row.baseline { color: var(--pc-text-muted); }
+  .pc-pathway-name { display: block; font-weight: 700; font-size: 14px; color: var(--pc-text); margin-bottom: 4px; }
+  .pc-badge-group { display: flex; flex-wrap: wrap; gap: 6px; }
+  .pc-badge { font-size: 10.5px; font-weight: 700; letter-spacing: 0.02em; padding: 3px 8px; border-radius: 999px; white-space: nowrap; }
+  .pc-badge.recommended { background: var(--pc-margin); color: #fff; }
+  .pc-badge.good { background: var(--pc-margin-soft); color: var(--pc-margin); border: 1px solid rgba(47,111,78,.35); }
+  .pc-badge.baseline { background: var(--pc-warn-soft); color: var(--pc-warn); border: 1px solid rgba(179,73,43,.35); }
+  .pc-metric { font-weight: 700; }
+  .pc-good { color: var(--pc-margin); }
+  .pc-bad { color: var(--pc-warn); }
+  .pc-neutral { color: var(--pc-text); }
+  .pc-bars-cell { width: 160px; }
+  .pc-scale { display: flex; flex-direction: column; gap: 4px; width: 140px; }
+  .pc-scale-track { height: 6px; border-radius: 999px; background: var(--pc-neutral-soft); overflow: hidden; }
+  .pc-scale-fill { height: 100%; border-radius: 999px; transition: width .35s ease; }
+  .pc-scale-fill.margin { background: var(--pc-margin); }
+  .pc-scale-fill.emissions { background: var(--pc-warn); }
+  .pc-col-actions { text-align: right; }
+  .pc-details-btn {
+    appearance: none;
+    border: 1px solid var(--pc-border);
+    background: var(--pc-surface);
+    color: var(--pc-text);
+    font-size: 12.5px;
+    font-weight: 600;
+    padding: 6px 12px;
+    border-radius: var(--pc-radius-sm);
+    cursor: pointer;
+    transition: border-color .15s ease, color .15s ease;
+    font-family: inherit;
+  }
+  .pc-details-btn:hover { border-color: var(--pc-emissions); color: var(--pc-emissions); }
+  .pc-detail-row td { padding: 0; border-bottom: 1px solid var(--pc-border); }
+  .pc-detail-panel {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 18px;
+    padding: 16px 20px;
+    background: var(--pc-surface-sunken);
+    white-space: normal;
+  }
+  .pc-detail-label { margin: 0 0 4px; font-size: 11px; font-weight: 700; letter-spacing: 0.03em; text-transform: uppercase; color: var(--pc-text-muted); }
+  .pc-detail-text { margin: 0; font-size: 12.5px; line-height: 1.5; color: var(--pc-text); }
+  .pc-detail-formula { font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace; font-size: 12px; }
+  .pc-footnote { margin: 0; font-size: 12px; color: var(--pc-text-muted); }
+
+  @media (max-width: 640px) {
+    .pc-header { flex-direction: column; }
+    .pc-view-toggle { align-self: stretch; }
+    .pc-toggle-btn { flex: 1; text-align: center; }
+    .pc-detail-panel { grid-template-columns: 1fr; }
+    .pc-bars-cell { width: 120px; }
+    .pc-scale { width: 100px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="pc-page">
+  <div class="pc-note">Static HTML/CSS/JS version — same design, dataset and calculation logic as the React component in the zip. No build step: just open this file in a browser.</div>
+
+  <section class="pc-root" id="pc-root">
+
+    <div class="pc-hero" id="pc-hero">
+      <div class="pc-hero-glow pc-hero-glow--margin" id="hero-glow-margin"></div>
+      <div class="pc-hero-glow pc-hero-glow--emissions" id="hero-glow-emissions"></div>
+
+      <div class="pc-hero-top">
+        <div>
+          <p class="pc-eyebrow">Feature 06 — Objective-Weight Optimizer</p>
+          <h2 class="pc-hero-title">Tune the trade-off</h2>
+          <p class="pc-subtitle">Drag the slider to tell the optimizer what matters more for this cluster — the recommended pathway, margin and emissions avoided update instantly.</p>
+        </div>
+        <div class="pc-hero-weights" id="hero-weights">
+          <span class="pc-hw-margin">Margin: 70%</span><span class="pc-hw-sep">|</span><span class="pc-hw-emissions">Emissions: 30%</span>
+        </div>
+      </div>
+
+      <div class="pc-slider-wrap">
+        <span class="pc-slider-endlabel pc-slider-endlabel--margin">Maximum margin</span>
+        <input
+          type="range"
+          min="0"
+          max="100"
+          step="1"
+          value="70"
+          id="objective-slider"
+          class="pc-slider"
+          aria-label="Balance objective between maximum margin and maximum emissions avoided"
+          aria-valuetext="Margin 70%, Emissions 30%"
+        />
+        <span class="pc-slider-endlabel pc-slider-endlabel--emissions">Maximum emissions avoided</span>
+      </div>
+
+      <div class="pc-hero-result">
+        <div class="pc-hero-pick">
+          <span class="pc-hero-pick-badge">Optimizer pick</span>
+          <p class="pc-hero-pick-name" id="hero-pick-name"></p>
+          <p class="pc-hero-pick-why" id="hero-pick-why"></p>
+        </div>
+        <div class="pc-hero-metrics">
+          <div class="pc-hero-metric">
+            <span class="pc-hero-metric-label">Net margin</span>
+            <span class="pc-hero-metric-value" id="hero-metric-margin" style="color:var(--pc-margin)"></span>
+          </div>
+          <div class="pc-hero-metric">
+            <span class="pc-hero-metric-label">CO₂e avoided</span>
+            <span class="pc-hero-metric-value" id="hero-metric-co2" style="color:var(--pc-emissions)"></span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <header class="pc-header">
+      <div>
+        <p class="pc-eyebrow">Feature 03 — Pathway Comparison</p>
+        <h2 class="pc-title">Same tonnage, five outcomes</h2>
+        <p class="pc-subtitle">For the same amount of biomass, which pathway pays the most after transport — and avoids the most emissions?</p>
+      </div>
+      <div class="pc-view-toggle" role="tablist">
+        <button type="button" class="pc-toggle-btn financial" id="btn-financial">Financial View</button>
+        <button type="button" class="pc-toggle-btn environmental" id="btn-environmental">Environmental View</button>
+      </div>
+    </header>
+
+    <div class="pc-quantity-row">
+      <span class="pc-quantity-label">Compare for</span>
+      <div class="pc-quantity-options" id="qty-options">
+        <!-- preset buttons injected by JS -->
+        <div class="pc-qty-custom" id="qty-custom-wrap">
+          <input type="text" inputmode="numeric" placeholder="Custom" id="qty-custom-input" />
+        </div>
+      </div>
+      <span class="pc-quantity-label suffix">tonnes</span>
+    </div>
+
+    <div class="pc-why-box">
+      <span class="pc-why-badge">Recommended</span>
+      <div>
+        <p class="pc-why-title" id="why-title"></p>
+        <p class="pc-why-text" id="why-text"></p>
+      </div>
+    </div>
+
+    <div class="pc-table-scroll">
+      <table class="pc-table">
+        <thead>
+          <tr>
+            <th class="pc-col-sticky">Pathway</th>
+            <th>Revenue</th>
+            <th>Transport</th>
+            <th>Processing</th>
+            <th id="th-margin">Net Margin</th>
+            <th>Emissions</th>
+            <th id="th-co2">CO₂ Avoided</th>
+            <th>Margin vs Emissions</th>
+            <th class="pc-col-actions">Details</th>
+          </tr>
+        </thead>
+        <tbody id="pc-tbody">
+          <!-- rows injected by JS -->
+        </tbody>
+      </table>
+    </div>
+
+    <p class="pc-footnote" id="pc-footnote"></p>
+  </section>
+</div>
+
+<script>
+  // ---------------------------------------------------------------
+  // Same dataset + calculation engine as pathwayData.js in the zip.
+  // ---------------------------------------------------------------
+  const PATHWAYS = [
+    {
+      id: "recommended",
+      name: "2G Ethanol (Recommended)",
+      shortLabel: "Recommended",
+      isRecommended: true,
+      ratesPerTonne: { revenue: 4200, transportCost: 350, processingCost: 1980 },
+      emissionsPerTonne: 0.12,
+      whyRecommended: "Highest net margin of all viable pathways for this cluster, with the lowest processing emissions among revenue-generating options — the optimizer's Pareto-optimal pick balancing margin and emissions avoided.",
+      details: {
+        revenueNote: "Sale price to nearest 2G ethanol offtaker, based on current procurement rate per tonne of feedstock.",
+        transportNote: "Trucking cost to the assigned buyer, calculated from routing distance and per-km haulage rate.",
+        processingNote: "Feedstock handling, pre-treatment and enzymatic conversion cost charged by the offtaker, netted back to the supplier price.",
+        marginFormula: "Net Margin = Revenue − Transport Cost − Processing Cost",
+        emissionsNote: "Lifecycle processing emissions per tonne of feedstock converted to ethanol, including transport.",
+      },
+    },
+    {
+      id: "bioenergy",
+      name: "Bioenergy / Biomass Plant",
+      shortLabel: "Bioenergy",
+      isRecommended: false,
+      ratesPerTonne: { revenue: 3600, transportCost: 380, processingCost: 1620 },
+      emissionsPerTonne: 0.31,
+      details: {
+        revenueNote: "Sale price to biomass power plant, based on calorific-value-linked procurement rate.",
+        transportNote: "Trucking cost to the nearest plant with available intake capacity.",
+        processingNote: "Combustion feedstock prep (chipping/baling) and handling cost netted back to supplier price.",
+        marginFormula: "Net Margin = Revenue − Transport Cost − Processing Cost",
+        emissionsNote: "Combustion emissions per tonne of feedstock, including transport.",
+      },
+    },
+    {
+      id: "biochar",
+      name: "Biochar",
+      shortLabel: "Biochar",
+      isRecommended: false,
+      ratesPerTonne: { revenue: 3300, transportCost: 400, processingCost: 1480 },
+      emissionsPerTonne: -0.15,
+      details: {
+        revenueNote: "Sale price for pyrolysis-derived biochar into the soil-amendment / carbon-credit market.",
+        transportNote: "Trucking cost to the nearest pyrolysis unit.",
+        processingNote: "Pyrolysis energy and equipment cost netted back to supplier price.",
+        marginFormula: "Net Margin = Revenue − Transport Cost − Processing Cost",
+        emissionsNote: "Pyrolysis process emissions net of the soil carbon-sequestration credit — biochar locks carbon into a stable form, making this pathway net carbon-negative per tonne, including transport.",
+      },
+    },
+    {
+      id: "composting",
+      name: "Composting",
+      shortLabel: "Composting",
+      isRecommended: false,
+      ratesPerTonne: { revenue: 2800, transportCost: 420, processingCost: 1130 },
+      emissionsPerTonne: 0.6,
+      details: {
+        revenueNote: "Sale price for finished compost into the local agri-input market.",
+        transportNote: "Trucking cost to the nearest composting/windrow facility.",
+        processingNote: "Windrow turning, water and labour cost over the composting cycle, netted back to supplier price.",
+        marginFormula: "Net Margin = Revenue − Transport Cost − Processing Cost",
+        emissionsNote: "Methane/N2O emissions from the composting process per tonne of feedstock, including transport.",
+      },
+    },
+    {
+      id: "open-burning",
+      name: "Open Burning",
+      shortLabel: "Open Burning",
+      isRecommended: false,
+      isBaseline: true,
+      ratesPerTonne: { revenue: 0, transportCost: 0, processingCost: 0 },
+      emissionsPerTonne: 2.84,
+      details: {
+        revenueNote: "No revenue — residue is burned in-field, not sold.",
+        transportNote: "No transport — residue is burned where it lies.",
+        processingNote: "No processing cost incurred.",
+        marginFormula: "Net Margin = ₹0 (status quo, no transaction)",
+        emissionsNote: "Direct field-burning emission factor per tonne of residue — the baseline every other pathway avoids.",
+      },
+    },
+  ];
+
+  const QUANTITY_PRESETS = [50, 100, 250, 500];
+
+  function calculateForQuantity(quantity) {
+    const qty = Number(quantity) > 0 ? Number(quantity) : 0;
+    const baseline = PATHWAYS.find(p => p.isBaseline);
+    const baselineEmissions = baseline ? baseline.emissionsPerTonne * qty : 0;
+
+    const rows = PATHWAYS.map(p => {
+      const revenue = p.ratesPerTonne.revenue * qty;
+      const transportCost = p.ratesPerTonne.transportCost * qty;
+      const processingCost = p.ratesPerTonne.processingCost * qty;
+      const netMargin = revenue - transportCost - processingCost;
+      const emissions = p.emissionsPerTonne * qty;
+      const co2Avoided = p.isBaseline ? 0 : Math.max(0, baselineEmissions - emissions);
+      return { ...p, quantity: qty, revenue, transportCost, processingCost, netMargin, emissions, co2Avoided };
+    });
+
+    const highestMarginId = rows.reduce((best, r) => r.netMargin > best.netMargin ? r : best).id;
+    const lowestEmissionsId = rows.reduce((best, r) => r.emissions < best.emissions ? r : best).id;
+
+    return rows.map(r => ({
+      ...r,
+      isHighestMargin: r.id === highestMarginId,
+      isLowestEmissions: r.id === lowestEmissionsId,
+    }));
+  }
+
+  const currencyFormatter = new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 });
+  const formatCurrency = v => currencyFormatter.format(v);
+  const formatTonnes = v => `${v.toFixed(2)} t`;
+  const formatEmissions = v => (v < 0 ? `−${Math.abs(v).toFixed(2)} t (net sequestered)` : `${v.toFixed(2)} t`);
+
+  // ---------------------------------------------------------------
+  // Feature 06 — Objective-Weight Optimizer
+  // ---------------------------------------------------------------
+  // Pure functions, same shape as calculateForQuantity above: take the
+  // already-computed rows for the current quantity and a margin-weight
+  // (0-100, emissions-weight is its complement) and return a ranked list.
+  //
+  // TO CONNECT A REAL LP / OPTIMIZATION BACKEND LATER:
+  // Keep the same input/output shape and swap the body for a fetch, e.g.
+  //
+  //   async function scorePathways(rows, marginWeightPct, clusterId) {
+  //     const res = await fetch(`/api/clusters/${clusterId}/optimize`, {
+  //       method: "POST",
+  //       headers: { "Content-Type": "application/json" },
+  //       body: JSON.stringify({
+  //         marginWeight: marginWeightPct / 100,
+  //         emissionsWeight: 1 - marginWeightPct / 100,
+  //       }),
+  //     });
+  //     return res.json(); // pathways sorted desc by `score`, same fields
+  //   }
+  //
+  // The UI below only ever reads `.score` / `.normMargin` / `.normEmissions`
+  // off the top of the list, so nothing in render() needs to change.
+  function scorePathways(rows, marginWeightPct) {
+    const marginWeight = marginWeightPct / 100;
+    const emissionsWeight = 1 - marginWeight;
+
+    // Baseline (open burning) is never a candidate for the optimizer.
+    const candidates = rows.filter(r => !r.isBaseline);
+
+    // Normalize against the best-in-class value among candidates at the
+    // current quantity, so the slider behaves the same at 50t or 500t.
+    const maxMargin = Math.max(1e-9, ...candidates.map(r => Math.max(0, r.netMargin)));
+    const maxCO2 = Math.max(1e-9, ...candidates.map(r => r.co2Avoided));
+
+    const scored = candidates.map(r => {
+      const normMargin = Math.max(0, r.netMargin) / maxMargin;
+      const normEmissions = r.co2Avoided / maxCO2;
+      const score = marginWeight * normMargin + emissionsWeight * normEmissions;
+      return { ...r, score, normMargin, normEmissions };
+    });
+
+    scored.sort((a, b) => b.score - a.score);
+    return scored;
+  }
+
+  function getOptimalPathway(rows, marginWeightPct) {
+    return scorePathways(rows, marginWeightPct)[0];
+  }
+
+  // Short, human-readable rationale for the current slider position —
+  // replace with `pick.whyRecommended` (or a backend-supplied explanation
+  // string) if the real optimizer returns its own narrative.
+  function explainRecommendation(pick, marginWeightPct) {
+    const emissionsWeightPct = 100 - marginWeightPct;
+    if (marginWeightPct >= 80) {
+      return `With ${marginWeightPct}% priority on margin, ${pick.name} is the pick — it delivers the highest net margin of any viable pathway at this quantity.`;
+    }
+    if (emissionsWeightPct >= 80) {
+      return `With ${emissionsWeightPct}% priority on emissions avoided, ${pick.name} is the pick — it avoids the most CO₂e of any pathway at this quantity.`;
+    }
+    return `Balancing margin (${marginWeightPct}%) against emissions avoided (${emissionsWeightPct}%), ${pick.name} scores highest overall — the best blend of net margin and CO₂e avoided at this weighting.`;
+  }
+
+  // ---------------------------------------------------------------
+  // State + render
+  // ---------------------------------------------------------------
+  let state = { quantity: 100, isCustom: false, view: "financial", expandedId: null, marginWeight: 70 };
+
+  function render() {
+    const rows = calculateForQuantity(state.quantity);
+    const sorted = [...rows].sort((a, b) =>
+      state.view === "financial" ? b.netMargin - a.netMargin : b.co2Avoided - a.co2Avoided
+    );
+    const maxMargin = Math.max(...rows.map(r => Math.max(0, r.netMargin)));
+    const maxEmissions = Math.max(...rows.map(r => r.emissions));
+
+    // Feature 06: the optimizer's weighted pick replaces the static
+    // `isRecommended` flag as the source of truth for "Recommended".
+    const pick = getOptimalPathway(rows, state.marginWeight);
+    const emissionsWeight = 100 - state.marginWeight;
+
+    // toggle buttons
+    document.getElementById("btn-financial").classList.toggle("active", state.view === "financial");
+    document.getElementById("btn-environmental").classList.toggle("active", state.view === "environmental");
+
+    // column emphasis
+    document.getElementById("th-margin").className = state.view === "financial" ? "pc-col-emphasis" : "";
+    document.getElementById("th-co2").className = state.view === "environmental" ? "pc-col-emphasis" : "";
+
+    // --- Feature 06: hero slider readout ---
+    document.getElementById("hero-weights").innerHTML =
+      `<span class="pc-hw-margin">Margin: ${state.marginWeight}%</span><span class="pc-hw-sep">|</span><span class="pc-hw-emissions">Emissions: ${emissionsWeight}%</span>`;
+
+    const slider = document.getElementById("objective-slider");
+    slider.style.background = `linear-gradient(to right, var(--pc-margin) 0%, var(--pc-margin) ${state.marginWeight}%, var(--pc-emissions) ${state.marginWeight}%, var(--pc-emissions) 100%)`;
+    slider.setAttribute("aria-valuetext", `Margin ${state.marginWeight}%, Emissions ${emissionsWeight}%`);
+
+    document.getElementById("hero-glow-margin").style.opacity = (state.marginWeight / 100) * 0.3;
+    document.getElementById("hero-glow-emissions").style.opacity = (emissionsWeight / 100) * 0.3;
+
+    document.getElementById("hero-pick-name").textContent = pick.name;
+    document.getElementById("hero-pick-why").textContent = explainRecommendation(pick, state.marginWeight);
+    document.getElementById("hero-metric-margin").textContent = formatCurrency(pick.netMargin);
+    document.getElementById("hero-metric-co2").textContent = formatTonnes(pick.co2Avoided);
+
+    // why box (below the table) mirrors the same optimizer pick
+    document.getElementById("why-title").textContent = pick.name;
+    document.getElementById("why-text").textContent = explainRecommendation(pick, state.marginWeight);
+
+    // footnote
+    document.getElementById("pc-footnote").textContent =
+      `Figures shown are for ${state.quantity || 0} tonnes of feedstock, calculated from per-tonne rates. Demo values — replace with live optimizer output per cluster.`;
+
+    // table body
+    const tbody = document.getElementById("pc-tbody");
+    tbody.innerHTML = "";
+
+    sorted.forEach(row => {
+      const marginPct = maxMargin > 0 ? Math.max(0, row.netMargin) / maxMargin : 0;
+      const emissionsPct = maxEmissions > 0 ? row.emissions / maxEmissions : 0;
+      const marginTone = row.isBaseline ? "pc-neutral" : row.isHighestMargin ? "pc-good" : row.netMargin <= 0 ? "pc-bad" : "pc-neutral";
+      const emissionsTone = row.isBaseline ? "pc-bad" : row.isLowestEmissions ? "pc-good" : "pc-neutral";
+      const isPick = row.id === pick.id;
+
+      const tr = document.createElement("tr");
+      tr.className = `pc-row ${isPick ? "recommended" : ""} ${row.isBaseline ? "baseline" : ""}`;
+
+      const badges = [
+        isPick ? `<span class="pc-badge recommended">Recommended</span>` : "",
+        (row.isHighestMargin && !row.isBaseline) ? `<span class="pc-badge good">Highest margin</span>` : "",
+        (row.isLowestEmissions && !row.isBaseline) ? `<span class="pc-badge good">Lowest emissions</span>` : "",
+        row.isBaseline ? `<span class="pc-badge baseline">Baseline</span>` : "",
+      ].join("");
+
+      tr.innerHTML = `
+        <th class="pc-col-sticky">
+          <span class="pc-pathway-name">${row.shortLabel}</span>
+          <span class="pc-badge-group">${badges}</span>
+        </th>
+        <td>${formatCurrency(row.revenue)}</td>
+        <td>${formatCurrency(row.transportCost)}</td>
+        <td>${formatCurrency(row.processingCost)}</td>
+        <td class="pc-metric ${marginTone} ${state.view === "financial" ? "pc-col-emphasis" : ""}">${formatCurrency(row.netMargin)}</td>
+        <td>${formatEmissions(row.emissions)}</td>
+        <td class="pc-metric ${emissionsTone} ${state.view === "environmental" ? "pc-col-emphasis" : ""}">${formatTonnes(row.co2Avoided)}</td>
+        <td class="pc-bars-cell">
+          <div class="pc-scale">
+            <div class="pc-scale-track"><div class="pc-scale-fill margin" style="width:${marginPct * 100}%"></div></div>
+            <div class="pc-scale-track"><div class="pc-scale-fill emissions" style="width:${emissionsPct * 100}%"></div></div>
+          </div>
+        </td>
+        <td class="pc-col-actions">
+          <button type="button" class="pc-details-btn" data-id="${row.id}">${state.expandedId === row.id ? "Hide" : "View"}</button>
+        </td>
+      `;
+      tbody.appendChild(tr);
+
+      if (state.expandedId === row.id) {
+        const detailTr = document.createElement("tr");
+        detailTr.className = "pc-detail-row";
+        detailTr.innerHTML = `
+          <td colspan="9">
+            <div class="pc-detail-panel">
+              <div><p class="pc-detail-label">Revenue</p><p class="pc-detail-text">${row.details.revenueNote}</p></div>
+              <div><p class="pc-detail-label">Transport cost</p><p class="pc-detail-text">${row.details.transportNote}</p></div>
+              <div><p class="pc-detail-label">Processing cost</p><p class="pc-detail-text">${row.details.processingNote}</p></div>
+              <div><p class="pc-detail-label">Net margin formula</p><p class="pc-detail-text pc-detail-formula">${row.details.marginFormula}</p></div>
+              <div><p class="pc-detail-label">Emissions basis</p><p class="pc-detail-text">${row.details.emissionsNote}</p></div>
+            </div>
+          </td>
+        `;
+        tbody.appendChild(detailTr);
+      }
+    });
+
+    tbody.querySelectorAll(".pc-details-btn").forEach(btn => {
+      btn.addEventListener("click", () => {
+        const id = btn.getAttribute("data-id");
+        state.expandedId = state.expandedId === id ? null : id;
+        render();
+      });
+    });
+
+    // quantity preset buttons
+    document.querySelectorAll(".pc-qty-btn").forEach(btn => {
+      const val = Number(btn.getAttribute("data-value"));
+      btn.classList.toggle("active", !state.isCustom && state.quantity === val);
+    });
+    document.getElementById("qty-custom-wrap").classList.toggle("active", state.isCustom);
+  }
+
+  // build quantity preset buttons once
+  const qtyOptions = document.getElementById("qty-options");
+  const customWrap = document.getElementById("qty-custom-wrap");
+  QUANTITY_PRESETS.forEach(preset => {
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "pc-qty-btn";
+    btn.textContent = preset;
+    btn.setAttribute("data-value", preset);
+    btn.addEventListener("click", () => {
+      state.isCustom = false;
+      state.quantity = preset;
+      document.getElementById("qty-custom-input").value = "";
+      render();
+    });
+    qtyOptions.insertBefore(btn, customWrap);
+  });
+
+  document.getElementById("qty-custom-input").addEventListener("input", (e) => {
+    const val = e.target.value.replace(/[^0-9]/g, "");
+    e.target.value = val;
+    state.isCustom = true;
+    if (val) state.quantity = Number(val);
+    render();
+  });
+
+  document.getElementById("objective-slider").addEventListener("input", (e) => {
+    state.marginWeight = Number(e.target.value);
+    render();
+  });
+
+  document.getElementById("btn-financial").addEventListener("click", () => {
+    state.view = "financial";
+    render();
+  });
+  document.getElementById("btn-environmental").addEventListener("click", () => {
+    state.view = "environmental";
+    render();
+  });
+
+  render();
+</script>
+</body>
+</html>
