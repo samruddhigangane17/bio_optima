@@ -27,11 +27,11 @@ df = pd.DataFrame({
 for col in ["rainfall_mm", "soil_type", "fertilizer_kg_per_acre"]:
     df.loc[df.sample(frac=0.05, random_state=1).index, col] = np.nan
 
-# --- Target variables (tons), loosely correlated with acreage/age/fertilizer ---
-base = df["farm_acreage"] * (df["crop_age_months"] / 12)
-df["bagasse_tons"] = np.round(base * np.random.uniform(2.8, 3.6, N), 2)
-df["leaves_tons"] = np.round(base * np.random.uniform(0.9, 1.4, N), 2)
-df["press_mud_tons"] = np.round(base * np.random.uniform(0.3, 0.6, N), 2)
+# NOTE: residue tonnage (trash/tops/bagasse/press mud) is intentionally NOT
+# generated here. It's computed deterministically from farm_acreage and
+# crop_age_months via RPR conversion in 03_residue_quantification.py, so
+# there's a single source of truth for residue numbers instead of two
+# disagreeing values living in different files.
 
 df.to_csv("../data/sugarcane_data.csv", index=False)
 print("Saved sugarcane_data.csv with shape:", df.shape)
