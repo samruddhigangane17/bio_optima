@@ -1,0 +1,604 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Pathway Comparison — CaneCycle</title>
+<style>
+  :root {
+    --pc-surface: #ffffff;
+    --pc-surface-sunken: #f3f6f2;
+    --pc-border: #e2e8e1;
+    --pc-text: #16261f;
+    --pc-text-muted: #5b6b62;
+    --pc-margin: #2f6f4e;
+    --pc-margin-soft: #e5f1ea;
+    --pc-emissions: #1b4b66;
+    --pc-emissions-soft: #e6eef3;
+    --pc-warn: #b3492b;
+    --pc-warn-soft: #f6e8e2;
+    --pc-neutral-soft: #eef1ee;
+    --pc-radius-lg: 16px;
+    --pc-radius-md: 10px;
+    --pc-radius-sm: 7px;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: #fafbf9;
+    font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    color: var(--pc-text);
+  }
+
+  .pc-page {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 40px 24px 80px;
+  }
+
+  .pc-note {
+    background: #fffbe6;
+    border: 1px solid #f0d878;
+    border-radius: 8px;
+    padding: 10px 14px;
+    font-size: 12.5px;
+    color: #6b5a12;
+    margin-bottom: 24px;
+  }
+
+  .pc-root {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* ---------- header ---------- */
+  .pc-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 24px;
+    flex-wrap: wrap;
+  }
+  .pc-eyebrow {
+    margin: 0 0 6px;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--pc-margin);
+  }
+  .pc-title {
+    margin: 0 0 6px;
+    font-size: 24px;
+    line-height: 1.2;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+  }
+  .pc-subtitle {
+    margin: 0;
+    max-width: 56ch;
+    font-size: 14.5px;
+    line-height: 1.5;
+    color: var(--pc-text-muted);
+  }
+
+  .pc-view-toggle {
+    display: inline-flex;
+    padding: 3px;
+    background: var(--pc-surface-sunken);
+    border: 1px solid var(--pc-border);
+    border-radius: 999px;
+    flex-shrink: 0;
+  }
+  .pc-toggle-btn {
+    appearance: none;
+    border: none;
+    background: transparent;
+    font-size: 13px;
+    font-weight: 600;
+    padding: 8px 16px;
+    border-radius: 999px;
+    color: var(--pc-text-muted);
+    cursor: pointer;
+    transition: background-color .18s ease, color .18s ease, box-shadow .18s ease;
+    white-space: nowrap;
+  }
+  .pc-toggle-btn:hover { color: var(--pc-text); }
+  .pc-toggle-btn.active.financial { background: var(--pc-margin); color: #fff; box-shadow: 0 1px 2px rgba(0,0,0,.12); }
+  .pc-toggle-btn.active.environmental { background: var(--pc-emissions); color: #fff; box-shadow: 0 1px 2px rgba(0,0,0,.12); }
+
+  /* ---------- quantity row ---------- */
+  .pc-quantity-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+    padding: 12px 16px;
+    background: var(--pc-surface-sunken);
+    border: 1px solid var(--pc-border);
+    border-radius: var(--pc-radius-md);
+  }
+  .pc-quantity-label { font-size: 13.5px; font-weight: 600; color: var(--pc-text-muted); }
+  .pc-quantity-label.suffix { font-weight: 500; }
+  .pc-quantity-options { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .pc-qty-btn {
+    appearance: none;
+    border: 1px solid var(--pc-border);
+    background: var(--pc-surface);
+    color: var(--pc-text);
+    font-size: 13.5px;
+    font-weight: 600;
+    padding: 7px 14px;
+    border-radius: 999px;
+    cursor: pointer;
+    transition: border-color .15s ease, background-color .15s ease, color .15s ease;
+  }
+  .pc-qty-btn:hover { border-color: var(--pc-margin); }
+  .pc-qty-btn.active { background: var(--pc-margin); border-color: var(--pc-margin); color: #fff; }
+  .pc-qty-custom input {
+    width: 84px;
+    font-size: 13.5px;
+    font-weight: 600;
+    padding: 7px 12px;
+    border-radius: 999px;
+    border: 1px solid var(--pc-border);
+    background: var(--pc-surface);
+    color: var(--pc-text);
+    font-family: inherit;
+  }
+  .pc-qty-custom input:focus { outline: 2px solid var(--pc-margin); outline-offset: 1px; }
+  .pc-qty-custom.active input { border-color: var(--pc-margin); }
+
+  /* ---------- why recommended ---------- */
+  .pc-why-box {
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+    padding: 14px 16px;
+    background: var(--pc-margin-soft);
+    border: 1px solid rgba(47,111,78,.3);
+    border-radius: var(--pc-radius-md);
+  }
+  .pc-why-badge {
+    flex-shrink: 0;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+    color: #fff;
+    background: var(--pc-margin);
+    padding: 5px 10px;
+    border-radius: 999px;
+    margin-top: 2px;
+  }
+  .pc-why-title { margin: 0 0 2px; font-size: 14.5px; font-weight: 700; }
+  .pc-why-text { margin: 0; font-size: 13.5px; line-height: 1.5; color: var(--pc-text-muted); }
+
+  /* ---------- table ---------- */
+  .pc-table-scroll {
+    overflow-x: auto;
+    border: 1px solid var(--pc-border);
+    border-radius: var(--pc-radius-lg);
+    background: var(--pc-surface);
+    -webkit-overflow-scrolling: touch;
+  }
+  .pc-table {
+    width: 100%;
+    min-width: 880px;
+    border-collapse: separate;
+    border-spacing: 0;
+    font-size: 13.5px;
+  }
+  .pc-table thead th {
+    position: sticky;
+    top: 0;
+    background: var(--pc-surface-sunken);
+    color: var(--pc-text-muted);
+    font-size: 11.5px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    text-align: left;
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--pc-border);
+    white-space: nowrap;
+    z-index: 2;
+  }
+  .pc-table td, .pc-table th[scope="row"] {
+    padding: 14px 16px;
+    border-bottom: 1px solid var(--pc-border);
+    white-space: nowrap;
+    vertical-align: middle;
+  }
+  .pc-table tbody tr:last-child td, .pc-table tbody tr:last-child th { border-bottom: none; }
+  .pc-col-sticky { position: sticky; left: 0; background: inherit; z-index: 1; box-shadow: 1px 0 0 var(--pc-border); }
+  thead .pc-col-sticky { z-index: 3; background: var(--pc-surface-sunken); }
+  .pc-col-emphasis { background: var(--pc-surface-sunken); }
+  .pc-row { background: var(--pc-surface); transition: background-color .15s ease; }
+  .pc-row:hover { background: var(--pc-surface-sunken); }
+  .pc-row:hover .pc-col-sticky, .pc-row:hover .pc-col-emphasis { background: var(--pc-surface-sunken); }
+  .pc-row.recommended { background: var(--pc-margin-soft); }
+  .pc-row.recommended .pc-col-sticky { background: var(--pc-margin-soft); }
+  .pc-row.baseline { color: var(--pc-text-muted); }
+  .pc-pathway-name { display: block; font-weight: 700; font-size: 14px; color: var(--pc-text); margin-bottom: 4px; }
+  .pc-badge-group { display: flex; flex-wrap: wrap; gap: 6px; }
+  .pc-badge { font-size: 10.5px; font-weight: 700; letter-spacing: 0.02em; padding: 3px 8px; border-radius: 999px; white-space: nowrap; }
+  .pc-badge.recommended { background: var(--pc-margin); color: #fff; }
+  .pc-badge.good { background: var(--pc-margin-soft); color: var(--pc-margin); border: 1px solid rgba(47,111,78,.35); }
+  .pc-badge.baseline { background: var(--pc-warn-soft); color: var(--pc-warn); border: 1px solid rgba(179,73,43,.35); }
+  .pc-metric { font-weight: 700; }
+  .pc-good { color: var(--pc-margin); }
+  .pc-bad { color: var(--pc-warn); }
+  .pc-neutral { color: var(--pc-text); }
+  .pc-bars-cell { width: 160px; }
+  .pc-scale { display: flex; flex-direction: column; gap: 4px; width: 140px; }
+  .pc-scale-track { height: 6px; border-radius: 999px; background: var(--pc-neutral-soft); overflow: hidden; }
+  .pc-scale-fill { height: 100%; border-radius: 999px; transition: width .35s ease; }
+  .pc-scale-fill.margin { background: var(--pc-margin); }
+  .pc-scale-fill.emissions { background: var(--pc-warn); }
+  .pc-col-actions { text-align: right; }
+  .pc-details-btn {
+    appearance: none;
+    border: 1px solid var(--pc-border);
+    background: var(--pc-surface);
+    color: var(--pc-text);
+    font-size: 12.5px;
+    font-weight: 600;
+    padding: 6px 12px;
+    border-radius: var(--pc-radius-sm);
+    cursor: pointer;
+    transition: border-color .15s ease, color .15s ease;
+    font-family: inherit;
+  }
+  .pc-details-btn:hover { border-color: var(--pc-emissions); color: var(--pc-emissions); }
+  .pc-detail-row td { padding: 0; border-bottom: 1px solid var(--pc-border); }
+  .pc-detail-panel {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 18px;
+    padding: 16px 20px;
+    background: var(--pc-surface-sunken);
+    white-space: normal;
+  }
+  .pc-detail-label { margin: 0 0 4px; font-size: 11px; font-weight: 700; letter-spacing: 0.03em; text-transform: uppercase; color: var(--pc-text-muted); }
+  .pc-detail-text { margin: 0; font-size: 12.5px; line-height: 1.5; color: var(--pc-text); }
+  .pc-detail-formula { font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace; font-size: 12px; }
+  .pc-footnote { margin: 0; font-size: 12px; color: var(--pc-text-muted); }
+
+  @media (max-width: 640px) {
+    .pc-header { flex-direction: column; }
+    .pc-view-toggle { align-self: stretch; }
+    .pc-toggle-btn { flex: 1; text-align: center; }
+    .pc-detail-panel { grid-template-columns: 1fr; }
+    .pc-bars-cell { width: 120px; }
+    .pc-scale { width: 100px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="pc-page">
+  <div class="pc-note">Static HTML/CSS/JS version — same design, dataset and calculation logic as the React component in the zip. No build step: just open this file in a browser.</div>
+
+  <section class="pc-root" id="pc-root">
+    <header class="pc-header">
+      <div>
+        <p class="pc-eyebrow">Feature 03 — Pathway Comparison</p>
+        <h2 class="pc-title">Same tonnage, five outcomes</h2>
+        <p class="pc-subtitle">For the same amount of biomass, which pathway pays the most after transport — and avoids the most emissions?</p>
+      </div>
+      <div class="pc-view-toggle" role="tablist">
+        <button type="button" class="pc-toggle-btn financial" id="btn-financial">Financial View</button>
+        <button type="button" class="pc-toggle-btn environmental" id="btn-environmental">Environmental View</button>
+      </div>
+    </header>
+
+    <div class="pc-quantity-row">
+      <span class="pc-quantity-label">Compare for</span>
+      <div class="pc-quantity-options" id="qty-options">
+        <!-- preset buttons injected by JS -->
+        <div class="pc-qty-custom" id="qty-custom-wrap">
+          <input type="text" inputmode="numeric" placeholder="Custom" id="qty-custom-input" />
+        </div>
+      </div>
+      <span class="pc-quantity-label suffix">tonnes</span>
+    </div>
+
+    <div class="pc-why-box">
+      <span class="pc-why-badge">Recommended</span>
+      <div>
+        <p class="pc-why-title" id="why-title"></p>
+        <p class="pc-why-text" id="why-text"></p>
+      </div>
+    </div>
+
+    <div class="pc-table-scroll">
+      <table class="pc-table">
+        <thead>
+          <tr>
+            <th class="pc-col-sticky">Pathway</th>
+            <th>Revenue</th>
+            <th>Transport</th>
+            <th>Processing</th>
+            <th id="th-margin">Net Margin</th>
+            <th>Emissions</th>
+            <th id="th-co2">CO₂ Avoided</th>
+            <th>Margin vs Emissions</th>
+            <th class="pc-col-actions">Details</th>
+          </tr>
+        </thead>
+        <tbody id="pc-tbody">
+          <!-- rows injected by JS -->
+        </tbody>
+      </table>
+    </div>
+
+    <p class="pc-footnote" id="pc-footnote"></p>
+  </section>
+</div>
+
+<script>
+  // ---------------------------------------------------------------
+  // Same dataset + calculation engine as pathwayData.js in the zip.
+  // ---------------------------------------------------------------
+  const PATHWAYS = [
+    {
+      id: "recommended",
+      name: "2G Ethanol (Recommended)",
+      shortLabel: "Recommended",
+      isRecommended: true,
+      ratesPerTonne: { revenue: 4200, transportCost: 350, processingCost: 1980 },
+      emissionsPerTonne: 0.12,
+      whyRecommended: "Highest net margin of all viable pathways for this cluster, with the lowest processing emissions among revenue-generating options — the optimizer's Pareto-optimal pick balancing margin and emissions avoided.",
+      details: {
+        revenueNote: "Sale price to nearest 2G ethanol offtaker, based on current procurement rate per tonne of feedstock.",
+        transportNote: "Trucking cost to the assigned buyer, calculated from routing distance and per-km haulage rate.",
+        processingNote: "Feedstock handling, pre-treatment and enzymatic conversion cost charged by the offtaker, netted back to the supplier price.",
+        marginFormula: "Net Margin = Revenue − Transport Cost − Processing Cost",
+        emissionsNote: "Lifecycle processing emissions per tonne of feedstock converted to ethanol, including transport.",
+      },
+    },
+    {
+      id: "bioenergy",
+      name: "Bioenergy / Biomass Plant",
+      shortLabel: "Bioenergy",
+      isRecommended: false,
+      ratesPerTonne: { revenue: 3600, transportCost: 380, processingCost: 1620 },
+      emissionsPerTonne: 0.31,
+      details: {
+        revenueNote: "Sale price to biomass power plant, based on calorific-value-linked procurement rate.",
+        transportNote: "Trucking cost to the nearest plant with available intake capacity.",
+        processingNote: "Combustion feedstock prep (chipping/baling) and handling cost netted back to supplier price.",
+        marginFormula: "Net Margin = Revenue − Transport Cost − Processing Cost",
+        emissionsNote: "Combustion emissions per tonne of feedstock, including transport.",
+      },
+    },
+    {
+      id: "biochar",
+      name: "Biochar",
+      shortLabel: "Biochar",
+      isRecommended: false,
+      ratesPerTonne: { revenue: 3300, transportCost: 400, processingCost: 1480 },
+      emissionsPerTonne: 0.45,
+      details: {
+        revenueNote: "Sale price for pyrolysis-derived biochar into the soil-amendment / carbon-credit market.",
+        transportNote: "Trucking cost to the nearest pyrolysis unit.",
+        processingNote: "Pyrolysis energy and equipment cost netted back to supplier price.",
+        marginFormula: "Net Margin = Revenue − Transport Cost − Processing Cost",
+        emissionsNote: "Pyrolysis process emissions per tonne of feedstock, including transport.",
+      },
+    },
+    {
+      id: "composting",
+      name: "Composting",
+      shortLabel: "Composting",
+      isRecommended: false,
+      ratesPerTonne: { revenue: 2800, transportCost: 420, processingCost: 1130 },
+      emissionsPerTonne: 0.6,
+      details: {
+        revenueNote: "Sale price for finished compost into the local agri-input market.",
+        transportNote: "Trucking cost to the nearest composting/windrow facility.",
+        processingNote: "Windrow turning, water and labour cost over the composting cycle, netted back to supplier price.",
+        marginFormula: "Net Margin = Revenue − Transport Cost − Processing Cost",
+        emissionsNote: "Methane/N2O emissions from the composting process per tonne of feedstock, including transport.",
+      },
+    },
+    {
+      id: "open-burning",
+      name: "Open Burning",
+      shortLabel: "Open Burning",
+      isRecommended: false,
+      isBaseline: true,
+      ratesPerTonne: { revenue: 0, transportCost: 0, processingCost: 0 },
+      emissionsPerTonne: 2.84,
+      details: {
+        revenueNote: "No revenue — residue is burned in-field, not sold.",
+        transportNote: "No transport — residue is burned where it lies.",
+        processingNote: "No processing cost incurred.",
+        marginFormula: "Net Margin = ₹0 (status quo, no transaction)",
+        emissionsNote: "Direct field-burning emission factor per tonne of residue — the baseline every other pathway avoids.",
+      },
+    },
+  ];
+
+  const QUANTITY_PRESETS = [50, 100, 250, 500];
+
+  function calculateForQuantity(quantity) {
+    const qty = Number(quantity) > 0 ? Number(quantity) : 0;
+    const baseline = PATHWAYS.find(p => p.isBaseline);
+    const baselineEmissions = baseline ? baseline.emissionsPerTonne * qty : 0;
+
+    const rows = PATHWAYS.map(p => {
+      const revenue = p.ratesPerTonne.revenue * qty;
+      const transportCost = p.ratesPerTonne.transportCost * qty;
+      const processingCost = p.ratesPerTonne.processingCost * qty;
+      const netMargin = revenue - transportCost - processingCost;
+      const emissions = p.emissionsPerTonne * qty;
+      const co2Avoided = p.isBaseline ? 0 : Math.max(0, baselineEmissions - emissions);
+      return { ...p, quantity: qty, revenue, transportCost, processingCost, netMargin, emissions, co2Avoided };
+    });
+
+    const highestMarginId = rows.reduce((best, r) => r.netMargin > best.netMargin ? r : best).id;
+    const lowestEmissionsId = rows.reduce((best, r) => r.emissions < best.emissions ? r : best).id;
+
+    return rows.map(r => ({
+      ...r,
+      isHighestMargin: r.id === highestMarginId,
+      isLowestEmissions: r.id === lowestEmissionsId,
+    }));
+  }
+
+  const currencyFormatter = new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 });
+  const formatCurrency = v => currencyFormatter.format(v);
+  const formatTonnes = v => `${v.toFixed(2)} t`;
+
+  // ---------------------------------------------------------------
+  // State + render
+  // ---------------------------------------------------------------
+  let state = { quantity: 100, isCustom: false, view: "financial", expandedId: null };
+
+  function render() {
+    const rows = calculateForQuantity(state.quantity);
+    const sorted = [...rows].sort((a, b) =>
+      state.view === "financial" ? b.netMargin - a.netMargin : b.co2Avoided - a.co2Avoided
+    );
+    const maxMargin = Math.max(...rows.map(r => Math.max(0, r.netMargin)));
+    const maxEmissions = Math.max(...rows.map(r => r.emissions));
+    const recommended = rows.find(r => r.isRecommended);
+
+    // toggle buttons
+    document.getElementById("btn-financial").classList.toggle("active", state.view === "financial");
+    document.getElementById("btn-environmental").classList.toggle("active", state.view === "environmental");
+
+    // column emphasis
+    document.getElementById("th-margin").className = state.view === "financial" ? "pc-col-emphasis" : "";
+    document.getElementById("th-co2").className = state.view === "environmental" ? "pc-col-emphasis" : "";
+
+    // why box
+    document.getElementById("why-title").textContent = recommended.name;
+    document.getElementById("why-text").textContent = recommended.whyRecommended;
+
+    // footnote
+    document.getElementById("pc-footnote").textContent =
+      `Figures shown are for ${state.quantity || 0} tonnes of feedstock, calculated from per-tonne rates. Demo values — replace with live optimizer output per cluster.`;
+
+    // table body
+    const tbody = document.getElementById("pc-tbody");
+    tbody.innerHTML = "";
+
+    sorted.forEach(row => {
+      const marginPct = maxMargin > 0 ? Math.max(0, row.netMargin) / maxMargin : 0;
+      const emissionsPct = maxEmissions > 0 ? row.emissions / maxEmissions : 0;
+      const marginTone = row.isBaseline ? "pc-neutral" : row.isHighestMargin ? "pc-good" : row.netMargin <= 0 ? "pc-bad" : "pc-neutral";
+      const emissionsTone = row.isBaseline ? "pc-bad" : row.isLowestEmissions ? "pc-good" : "pc-neutral";
+
+      const tr = document.createElement("tr");
+      tr.className = `pc-row ${row.isRecommended ? "recommended" : ""} ${row.isBaseline ? "baseline" : ""}`;
+
+      const badges = [
+        row.isRecommended ? `<span class="pc-badge recommended">Recommended</span>` : "",
+        (row.isHighestMargin && !row.isBaseline) ? `<span class="pc-badge good">Highest margin</span>` : "",
+        (row.isLowestEmissions && !row.isBaseline) ? `<span class="pc-badge good">Lowest emissions</span>` : "",
+        row.isBaseline ? `<span class="pc-badge baseline">Baseline</span>` : "",
+      ].join("");
+
+      tr.innerHTML = `
+        <th class="pc-col-sticky">
+          <span class="pc-pathway-name">${row.shortLabel}</span>
+          <span class="pc-badge-group">${badges}</span>
+        </th>
+        <td>${formatCurrency(row.revenue)}</td>
+        <td>${formatCurrency(row.transportCost)}</td>
+        <td>${formatCurrency(row.processingCost)}</td>
+        <td class="pc-metric ${marginTone} ${state.view === "financial" ? "pc-col-emphasis" : ""}">${formatCurrency(row.netMargin)}</td>
+        <td>${formatTonnes(row.emissions)}</td>
+        <td class="pc-metric ${emissionsTone} ${state.view === "environmental" ? "pc-col-emphasis" : ""}">${formatTonnes(row.co2Avoided)}</td>
+        <td class="pc-bars-cell">
+          <div class="pc-scale">
+            <div class="pc-scale-track"><div class="pc-scale-fill margin" style="width:${marginPct * 100}%"></div></div>
+            <div class="pc-scale-track"><div class="pc-scale-fill emissions" style="width:${emissionsPct * 100}%"></div></div>
+          </div>
+        </td>
+        <td class="pc-col-actions">
+          <button type="button" class="pc-details-btn" data-id="${row.id}">${state.expandedId === row.id ? "Hide" : "View"}</button>
+        </td>
+      `;
+      tbody.appendChild(tr);
+
+      if (state.expandedId === row.id) {
+        const detailTr = document.createElement("tr");
+        detailTr.className = "pc-detail-row";
+        detailTr.innerHTML = `
+          <td colspan="9">
+            <div class="pc-detail-panel">
+              <div><p class="pc-detail-label">Revenue</p><p class="pc-detail-text">${row.details.revenueNote}</p></div>
+              <div><p class="pc-detail-label">Transport cost</p><p class="pc-detail-text">${row.details.transportNote}</p></div>
+              <div><p class="pc-detail-label">Processing cost</p><p class="pc-detail-text">${row.details.processingNote}</p></div>
+              <div><p class="pc-detail-label">Net margin formula</p><p class="pc-detail-text pc-detail-formula">${row.details.marginFormula}</p></div>
+              <div><p class="pc-detail-label">Emissions basis</p><p class="pc-detail-text">${row.details.emissionsNote}</p></div>
+            </div>
+          </td>
+        `;
+        tbody.appendChild(detailTr);
+      }
+    });
+
+    tbody.querySelectorAll(".pc-details-btn").forEach(btn => {
+      btn.addEventListener("click", () => {
+        const id = btn.getAttribute("data-id");
+        state.expandedId = state.expandedId === id ? null : id;
+        render();
+      });
+    });
+
+    // quantity preset buttons
+    document.querySelectorAll(".pc-qty-btn").forEach(btn => {
+      const val = Number(btn.getAttribute("data-value"));
+      btn.classList.toggle("active", !state.isCustom && state.quantity === val);
+    });
+    document.getElementById("qty-custom-wrap").classList.toggle("active", state.isCustom);
+  }
+
+  // build quantity preset buttons once
+  const qtyOptions = document.getElementById("qty-options");
+  const customWrap = document.getElementById("qty-custom-wrap");
+  QUANTITY_PRESETS.forEach(preset => {
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "pc-qty-btn";
+    btn.textContent = preset;
+    btn.setAttribute("data-value", preset);
+    btn.addEventListener("click", () => {
+      state.isCustom = false;
+      state.quantity = preset;
+      document.getElementById("qty-custom-input").value = "";
+      render();
+    });
+    qtyOptions.insertBefore(btn, customWrap);
+  });
+
+  document.getElementById("qty-custom-input").addEventListener("input", (e) => {
+    const val = e.target.value.replace(/[^0-9]/g, "");
+    e.target.value = val;
+    state.isCustom = true;
+    if (val) state.quantity = Number(val);
+    render();
+  });
+
+  document.getElementById("btn-financial").addEventListener("click", () => {
+    state.view = "financial";
+    render();
+  });
+  document.getElementById("btn-environmental").addEventListener("click", () => {
+    state.view = "environmental";
+    render();
+  });
+
+  render();
+</script>
+</body>
+</html>
