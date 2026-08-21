@@ -1,5 +1,6 @@
 """
 Feature 1 — Biomass Supply Map: static visual check.
+Feature 10 — Assumptions Panel, injected into the same HTML output.
 
 Renders the three outputs of 03_generate_biomass_supply_map_data.py into a
 single interactive-but-static HTML file you can open directly in a browser
@@ -10,6 +11,9 @@ single interactive-but-static HTML file you can open directly in a browser
   3. Harvest-Ready Clusters — one marker per cluster, sized by total
      recoverable tonnage, from harvest_clusters.csv.
 
+Also injects a toggleable "Assumptions" panel (Feature 10) listing every
+hardcoded constant from assumptions.py, built by 05_generate_assumptions_panel.py.
+
 Inputs:  biomass_supply_map.csv, district_crush_data.csv, harvest_clusters.csv
          (all in the same folder, output of 03_generate_biomass_supply_map_data.py)
 Output:  supply_map.html (same folder) — double-click to open in a browser.
@@ -19,6 +23,7 @@ Run: python 04_render_supply_map.py
 import numpy as np
 import pandas as pd
 import folium
+from importlib import import_module
 
 # ---------------------------------------------------------------------------
 # 0. Load the three outputs from the previous script
@@ -127,7 +132,7 @@ for _, row in clusters.iterrows():
 clusters_layer.add_to(m)
 
 # ---------------------------------------------------------------------------
-# 6. Layer control + a simple legend, then save
+# 6. Layer control + a simple legend
 # ---------------------------------------------------------------------------
 folium.LayerControl(collapsed=False).add_to(m)
 
@@ -144,5 +149,14 @@ legend_html = """
 """
 m.get_root().html.add_child(folium.Element(legend_html))
 
+# ---------------------------------------------------------------------------
+# 7. Feature 10 — inject the Assumptions Panel into the same HTML file
+# ---------------------------------------------------------------------------
+assumptions_panel_html = import_module("05_generate_assumptions_panel").build_assumptions_panel_html()
+m.get_root().html.add_child(folium.Element(assumptions_panel_html))
+
+# ---------------------------------------------------------------------------
+# 8. Save
+# ---------------------------------------------------------------------------
 m.save("supply_map.html")
 print("Saved supply_map.html — open it directly in a browser, no server needed.")

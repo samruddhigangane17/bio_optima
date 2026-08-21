@@ -4,6 +4,8 @@ Run: python 01_generate_mock_data.py
 """
 import numpy as np
 import pandas as pd
+from assumptions import BAGASSE_YIELD_RANGE, LEAVES_YIELD_RANGE, PRESS_MUD_YIELD_RANGE
+
 
 np.random.seed(42)
 N = 100
@@ -27,11 +29,11 @@ df = pd.DataFrame({
 for col in ["rainfall_mm", "soil_type", "fertilizer_kg_per_acre"]:
     df.loc[df.sample(frac=0.05, random_state=1).index, col] = np.nan
 
-# NOTE: residue tonnage (trash/tops/bagasse/press mud) is intentionally NOT
-# generated here. It's computed deterministically from farm_acreage and
-# crop_age_months via RPR conversion in 03_residue_quantification.py, so
-# there's a single source of truth for residue numbers instead of two
-# disagreeing values living in different files.
+# --- Target variables (tons), loosely correlated with acreage/age/fertilizer ---
+base = df["farm_acreage"] * (df["crop_age_months"] / 12)
+df["bagasse_tons"] = np.round(base * np.random.uniform(*BAGASSE_YIELD_RANGE, N), 2)
+df["leaves_tons"] = np.round(base * np.random.uniform(*LEAVES_YIELD_RANGE, N), 2)
+df["press_mud_tons"] = np.round(base * np.random.uniform(*PRESS_MUD_YIELD_RANGE, N), 2)
 
 df.to_csv("../data/sugarcane_data.csv", index=False)
 print("Saved sugarcane_data.csv with shape:", df.shape)
