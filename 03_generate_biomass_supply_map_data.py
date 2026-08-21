@@ -22,6 +22,18 @@ Run: python 03_generate_biomass_supply_map_data.py
 import numpy as np
 import pandas as pd
 from sklearn.cluster import DBSCAN
+from assumptions import (
+    PEAK_AGE_MONTHS,
+    HARVEST_AGE_MIN_MONTHS,
+    NDVI_DECLINE_THRESHOLD_PCT,
+    FARM_SCATTER_DEG,
+    CLUSTER_EPS_DEG,
+    CLUSTER_MIN_SAMPLES,
+    ACTIVE_MILLS_RANGE,
+    CRUSH_CAPACITY_TPD_RANGE,
+    SEASON_CRUSH_TONS_RANGE,
+    AVG_DISTANCE_TO_MILL_KM_RANGE,
+)
 
 np.random.seed(42)
 
@@ -50,12 +62,11 @@ district_weights = [DISTRICTS[d]["weight"] for d in district_names]
 df["district"] = np.random.choice(district_names, size=len(df), p=district_weights)
 
 # Scatter each farm within ~0.15 deg (~15km) of its district center
-SCATTER_DEG = 0.15
 df["latitude"] = df["district"].map(lambda d: DISTRICTS[d]["lat"]) + np.random.uniform(
-    -SCATTER_DEG, SCATTER_DEG, len(df)
+    -FARM_SCATTER_DEG, FARM_SCATTER_DEG, len(df)
 )
 df["longitude"] = df["district"].map(lambda d: DISTRICTS[d]["lon"]) + np.random.uniform(
-    -SCATTER_DEG, SCATTER_DEG, len(df)
+    -FARM_SCATTER_DEG, FARM_SCATTER_DEG, len(df)
 )
 df["latitude"] = df["latitude"].round(5)
 df["longitude"] = df["longitude"].round(5)
@@ -68,8 +79,6 @@ df["longitude"] = df["longitude"].round(5)
 #    apart (today, 15 days ago, 30 days ago) with independent noise so
 #    the scenes show a believable trend rather than a straight line.
 # ---------------------------------------------------------------------------
-PEAK_AGE_MONTHS = 9.0
-
 
 def ndvi_at_age(age_months):
     """Rough sugarcane NDVI growth curve: rises to a peak near 9 months,
@@ -104,9 +113,6 @@ df["ndvi_trend_pct"] = np.round(
     (df["ndvi_scene3"] - df["ndvi_scene1"]) / df["ndvi_scene1"] * 100, 2
 )
 
-HARVEST_AGE_MIN_MONTHS = 11
-NDVI_DECLINE_THRESHOLD_PCT = -2.0  # at least a 2% drop across the 3 scenes
-
 df["harvest_ready"] = (
     (df["crop_age_months"] >= HARVEST_AGE_MIN_MONTHS)
     & (df["ndvi_trend_pct"] <= NDVI_DECLINE_THRESHOLD_PCT)
@@ -118,10 +124,12 @@ df["harvest_ready"] = (
 np.random.seed(7)  # separate stream so district table changes independently
 district_crush = pd.DataFrame({
     "district": district_names,
-    "active_mills": np.random.randint(3, 9, len(district_names)),
-    "total_crush_capacity_tpd": np.random.randint(15000, 45000, len(district_names)),
-    "current_season_crush_tons": np.random.randint(400000, 1800000, len(district_names)),
-    "avg_distance_to_nearest_mill_km": np.round(np.random.uniform(4, 28, len(district_names)), 1),
+    "active_mills": np.random.randint(*ACTIVE_MILLS_RANGE, len(district_names)),
+    "total_crush_capacity_tpd": np.random.randint(*CRUSH_CAPACITY_TPD_RANGE, len(district_names)),
+    "current_season_crush_tons": np.random.randint(*SEASON_CRUSH_TONS_RANGE, len(district_names)),
+    "avg_distance_to_nearest_mill_km": np.round(
+        np.random.uniform(*AVG_DISTANCE_TO_MILL_KM_RANGE, len(district_names)), 1
+    ),
 })
 
 # ---------------------------------------------------------------------------
@@ -138,7 +146,7 @@ ready_mask = df["harvest_ready"]
 ready_df = df.loc[ready_mask, ["latitude", "longitude"]]
 
 if len(ready_df) > 0:
-    dbscan = DBSCAN(eps=0.05, min_samples=2)
+    dbscan = DBSCAN(eps=CLUSTER_EPS_DEG, min_samples=CLUSTER_MIN_SAMPLES)
     labels = dbscan.fit_predict(ready_df.values)
 
     # Re-label noise points (-1) as their own unique singleton clusters,
@@ -202,4 +210,3 @@ print(f"Harvest-ready clusters formed: {harvest_clusters['cluster_id'].nunique()
 # unmodified. A library like `sentinelhub-py` or Google Earth Engine's
 # Python API, queried per farm's (latitude, longitude) with a small buffer
 # polygon, is the natural drop-in replacement for ndvi_at_age().
-# ---------------------------------------------------------------------------
